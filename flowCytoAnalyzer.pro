@@ -12,11 +12,13 @@ SOURCES += \
     custompointselection.cpp \
     main.cpp \
     mainwindow.cpp \
+    plotwindow.cpp \
     qcustomplot.cpp
 
 HEADERS += \
     custompointselection.h \
     mainwindow.h \
+    plotwindow.h \
     qcustomplot.h
 
 FORMS += \

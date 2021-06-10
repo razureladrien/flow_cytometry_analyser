@@ -577,6 +577,7 @@ void MainWindow::parseFileData(QString fileName)
 void MainWindow::on_actionOpen_triggered()
 {
     QString fileName = QFileDialog::getOpenFileNames(this, tr("Open File"),"/flowData",tr("CSV/FCS Files (*.csv *.fcs)"))[0];
+
     parseFileHeader(fileName);
     parseFileText(fileName);
     parseFileData(fileName);
@@ -626,4 +627,12 @@ void MainWindow::on_cbox_y_activated(const QString &arg1)
 
     plot(style, 0, getX(), getY());
     ui->plot->graph(0)->rescaleAxes(true);
+}
+
+void MainWindow::on_actionAdd_plot_triggered()
+{
+    PlotWindow *p = new PlotWindow(this);
+    ui->gridLayout->addWidget(p->getWindow(),0,number_of_plots+1);
+    plot_windows.append(p);
+    number_of_plots ++;
 }

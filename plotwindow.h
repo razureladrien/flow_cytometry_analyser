@@ -1,0 +1,82 @@
+#ifndef PLOTWINDOW_H
+#define PLOTWINDOW_H
+
+#include <QWidget>
+#include "qcustomplot.h"
+#include "custompointselection.h"
+
+class PlotWindow : public QObject
+{
+    Q_OBJECT
+public:
+    PlotWindow(QWidget *parent = nullptr);
+    ~PlotWindow();
+
+    QGroupBox* getWindow();
+    QCustomPlot* getPlot();
+
+    void addPoint(double x, double y);
+    void clearData();
+    void plot(QCPScatterStyle scatterStyle,double graph_id, QVector<double> x, QVector<double> y);
+
+    QVector<double> getX() {return qv_x; };
+    QVector<double> getY() {return qv_y; };
+
+public slots:
+    void close_window();
+    void on_btn_zoom_clicked();
+    void on_btn_navigate_clicked();
+//    void on_btn_ellipse_clicked();
+//    void on_btn_free_form_clicked();
+
+//    void startEllipseSelection(QMouseEvent *event);
+//    void moveEllipseSelection(QMouseEvent *event);
+//    void endEllipseSelection(QMouseEvent *event);
+
+//    void startEndLine(QMouseEvent *event);
+//    void moveLine(QMouseEvent *event);
+
+//    void axisScale(QMouseEvent *event);
+
+//    void on_btn_resolution_clicked();
+
+//    void on_cbox_x_activated(const QString &arg1);
+
+//    void on_cbox_y_activated(const QString &arg1);
+
+private:
+    QCustomPlot *plot_widget;
+    QGroupBox *button_box;
+    QGroupBox *plot_box;
+    QSize size;
+
+    QPushButton *btn_zoom, *btn_navigate, *btn_ellipse, *btn_free_form, *btn_resolution, *close_btn;
+    QComboBox *cbox_x, *cbox_y;
+
+    QVector<double> qv_x, qv_y;
+    QVector<double> qv_x_to_plot, qv_y_to_plot;
+
+    QString xscale = "lin";
+    QString yscale = "lin";
+
+
+    bool eActive=false;
+    bool lActive=false;
+    bool started_line=false;
+
+    QCPItemEllipse *ellipse = nullptr;
+    CustomPointSelection *selectionObj = nullptr;
+    QCPItemLine *line = nullptr;
+    QCPItemEllipse *poly_closed = nullptr;
+    QList<QCPItemLine *> polygon = {};
+    double radius_x, radius_y;
+    double start_v_x, start_v_y;
+
+    bool ellipse_select=false;
+    bool free_form_select=false;
+    bool rescale_flag=true;
+    bool resolution_flag=true; // true = high res, false = low res
+
+};
+
+#endif // PLOTWINDOW_H

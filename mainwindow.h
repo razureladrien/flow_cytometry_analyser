@@ -4,6 +4,7 @@
 #include <QMainWindow>
 #include "qcustomplot.h"
 #include "custompointselection.h"
+#include "plotwindow.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -55,11 +56,16 @@ private slots:
 
     void on_cbox_y_activated(const QString &arg1);
 
+    void on_actionAdd_plot_triggered();
+
 private:
     Ui::MainWindow *ui;
 
     QVector<double> qv_x, qv_y;
     QVector<double> qv_x_to_plot, qv_y_to_plot;
+
+    qint32 number_of_plots = 0;
+    QList<PlotWindow *> plot_windows = {};
 
     QString xscale = "lin";
     QString yscale = "lin";

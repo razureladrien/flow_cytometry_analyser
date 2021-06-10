@@ -19,6 +19,7 @@ int main(int argc, char *argv[])
 
 //    w.plot(style, 0, w.getX(), w.getY());
 
+
     w.show();
     return a.exec();
 }
