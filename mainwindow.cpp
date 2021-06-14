@@ -36,6 +36,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     // axis scale change
     connect(ui->plot, SIGNAL(mouseDoubleClick(QMouseEvent*)), SLOT(axisScale(QMouseEvent*)));
+
 }
 
 MainWindow::~MainWindow()
@@ -578,6 +579,11 @@ void MainWindow::on_actionOpen_triggered()
 {
     QString fileName = QFileDialog::getOpenFileNames(this, tr("Open File"),"/flowData",tr("CSV/FCS Files (*.csv *.fcs)"))[0];
 
+    for (int p=0; p<plot_windows.length(); p++)
+    {
+        plot_windows[p]->close_window();
+    }
+
     parseFileHeader(fileName);
     parseFileText(fileName);
     parseFileData(fileName);
@@ -631,8 +637,19 @@ void MainWindow::on_cbox_y_activated(const QString &arg1)
 
 void MainWindow::on_actionAdd_plot_triggered()
 {
-    PlotWindow *p = new PlotWindow(this);
-    ui->gridLayout->addWidget(p->getWindow(),0,number_of_plots+1);
-    plot_windows.append(p);
     number_of_plots ++;
+    qDebug()<<number_of_plots;
+    PlotWindow *p = new PlotWindow(this, parameters, data);
+    if (number_of_plots < 3)
+        ui->gridLayout->addWidget(p->getWindow(),0,number_of_plots);
+    else if (number_of_plots >= 3)
+        ui->gridLayout->addWidget(p->getWindow(),1,number_of_plots-3);
+    plot_windows.append(p); // keep every plot in a list
+
+    connect(p, SIGNAL(deleted()), SLOT(plot_deleted()));
+}
+
+void MainWindow::plot_deleted()
+{
+    number_of_plots --;
 }

@@ -58,6 +58,8 @@ private slots:
 
     void on_actionAdd_plot_triggered();
 
+    void plot_deleted();
+
 private:
     Ui::MainWindow *ui;
 

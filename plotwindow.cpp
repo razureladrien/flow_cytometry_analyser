@@ -1,11 +1,14 @@
 #include "plotwindow.h"
 
-PlotWindow::PlotWindow(QWidget *parent)
+PlotWindow::PlotWindow(QWidget *parent, QList<QString> params, QVector<QVector<float>> data)
 {
     // enregistre toutes les information relatives au plot et
     // dans le mainwindow on va avoir la liste des plots qui sera saved
-    QVBoxLayout *layout = new QVBoxLayout(parent);
+
+    setParameters(params);
+    setData(data);
     plot_box = new QGroupBox(parent);
+    QVBoxLayout *layout = new QVBoxLayout(plot_box);
 
     plot_widget = new QCustomPlot(plot_box);
     plot_widget->addGraph();
@@ -33,6 +36,25 @@ PlotWindow::PlotWindow(QWidget *parent)
     cbox_x = new QComboBox(button_box);
     cbox_y = new QComboBox(button_box);
 
+    cbox_x->clear();
+    cbox_y->clear();
+    for (int i=0; i<parameters.length(); i++)
+    {
+        cbox_x->addItem(parameters[i]);
+        cbox_y->addItem(parameters[i]);
+    }
+    cbox_x->setCurrentIndex(0);
+    cbox_y->setCurrentIndex(1);
+
+    setDataFromParam(cbox_x->currentIndex(),cbox_y->currentIndex());
+
+    QCPScatterStyle style;
+    style.setShape(QCPScatterStyle::ssDisc);
+    style.setSize(1);
+    style.setPen(QPen(Qt::black));
+
+    plot(style, 0, getX(), getY());
+
     buttonLayout->addWidget(btn_zoom);
     buttonLayout->addWidget(btn_navigate);
     buttonLayout->addWidget(btn_ellipse);
@@ -58,6 +80,8 @@ PlotWindow::PlotWindow(QWidget *parent)
     connect(close_btn, SIGNAL(released()), SLOT(close_window()));
     connect(btn_zoom, SIGNAL(clicked()), SLOT(on_btn_zoom_clicked()));
     connect(btn_navigate, SIGNAL(clicked()), SLOT(on_btn_navigate_clicked()));
+    connect(cbox_x, SIGNAL(activated(int)), SLOT(on_cbox_x_activated()));
+    connect(cbox_y, SIGNAL(activated(int)), SLOT(on_cbox_y_activated()));
 }
 
 PlotWindow::~PlotWindow()
@@ -76,6 +100,7 @@ QCustomPlot* PlotWindow::getPlot()
 
 void PlotWindow::close_window()
 {
+    emit deleted();
     delete(plot_box);
     delete(this);
 }
@@ -90,6 +115,16 @@ void PlotWindow::clearData()
 {
     qv_x.clear();
     qv_y.clear();
+}
+
+void PlotWindow::setDataFromParam(int x_param, int y_param)
+{
+    clearData();
+    qDebug() << data.length();
+    for (int i=0; i<data.length(); i++)
+    {
+        addPoint(data[i][x_param], data[i][y_param]);
+    }
 }
 
 
@@ -111,6 +146,16 @@ void PlotWindow::plot(QCPScatterStyle scatterStyle, double graph_id, QVector<dou
     getPlot()->replot();
     getPlot()->update();
 
+}
+
+void PlotWindow::setParameters(QList<QString> p)
+{
+    parameters = p;
+}
+
+void PlotWindow::setData(QVector<QVector<float> > d)
+{
+    data = d;
 }
 
 
@@ -158,4 +203,28 @@ void PlotWindow::on_btn_navigate_clicked()
     getPlot()->setNoAntialiasingOnDrag(true);
     getPlot()->setInteraction(QCP::iRangeZoom);
     getPlot()->setSelectionRectMode(QCP::srmNone);
+}
+
+void PlotWindow::on_cbox_x_activated()
+{
+    setDataFromParam(cbox_x->currentIndex(),cbox_y->currentIndex());
+    QCPScatterStyle style;
+    style.setShape(QCPScatterStyle::ssDisc);
+    style.setSize(1);
+    style.setPen(QPen(Qt::black));
+
+    plot(style, 0, getX(), getY());
+    getPlot()->graph(0)->rescaleAxes(true);
+}
+
+void PlotWindow::on_cbox_y_activated()
+{
+    setDataFromParam(cbox_x->currentIndex(),cbox_y->currentIndex());
+    QCPScatterStyle style;
+    style.setShape(QCPScatterStyle::ssDisc);
+    style.setSize(1);
+    style.setPen(QPen(Qt::black));
+
+    plot(style, 0, getX(), getY());
+    getPlot()->graph(0)->rescaleAxes(true);
 }

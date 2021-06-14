@@ -9,7 +9,7 @@ class PlotWindow : public QObject
 {
     Q_OBJECT
 public:
-    PlotWindow(QWidget *parent = nullptr);
+    PlotWindow(QWidget *parent = nullptr, QList<QString> params = {}, QVector<QVector<float>> data = {});
     ~PlotWindow();
 
     QGroupBox* getWindow();
@@ -21,7 +21,10 @@ public:
 
     QVector<double> getX() {return qv_x; };
     QVector<double> getY() {return qv_y; };
+    void setParameters(QList<QString> p);
+    void setData(QVector<QVector<float>> d);
 
+    void setDataFromParam(int x_param, int y_param);
 public slots:
     void close_window();
     void on_btn_zoom_clicked();
@@ -40,9 +43,11 @@ public slots:
 
 //    void on_btn_resolution_clicked();
 
-//    void on_cbox_x_activated(const QString &arg1);
+    void on_cbox_x_activated();
+    void on_cbox_y_activated();
 
-//    void on_cbox_y_activated(const QString &arg1);
+signals:
+    void deleted();
 
 private:
     QCustomPlot *plot_widget;
@@ -58,6 +63,9 @@ private:
 
     QString xscale = "lin";
     QString yscale = "lin";
+
+     QList<QString> parameters;
+     QVector<QVector<float>> data;
 
 
     bool eActive=false;
