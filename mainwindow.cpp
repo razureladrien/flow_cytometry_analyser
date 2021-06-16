@@ -577,38 +577,39 @@ void MainWindow::parseFileData(QString fileName)
 
 void MainWindow::on_actionOpen_triggered()
 {
-    QString fileName = QFileDialog::getOpenFileNames(this, tr("Open File"),"/flowData",tr("CSV/FCS Files (*.csv *.fcs)"))[0];
-
     for (int p=0; p<plot_windows.length(); p++)
     {
         plot_windows[p]->close_window();
     }
-
-    parseFileHeader(fileName);
-    parseFileText(fileName);
-    parseFileData(fileName);
-
-    ui->cbox_x->clear();
-    ui->cbox_y->clear();
-    for (int i=0; i<parameters.length(); i++)
+    QStringList file = QFileDialog::getOpenFileNames(this, tr("Open File"),"/flowData",tr("CSV/FCS Files (*.csv *.fcs)"));
+    if (!file.empty())
     {
-        ui->cbox_x->addItem(parameters[i]);
-        ui->cbox_y->addItem(parameters[i]);
+        QString fileName = file[0];
+        parseFileHeader(fileName);
+        parseFileText(fileName);
+        parseFileData(fileName);
+
+        ui->cbox_x->clear();
+        ui->cbox_y->clear();
+        for (int i=0; i<parameters.length(); i++)
+        {
+            ui->cbox_x->addItem(parameters[i]);
+            ui->cbox_y->addItem(parameters[i]);
+        }
+        ui->cbox_x->setCurrentIndex(0);
+        ui->cbox_y->setCurrentIndex(1);
+
+        setDataFromParam(ui->cbox_x->currentIndex(),ui->cbox_y->currentIndex());
+
+        //qDebug() << x[1];
+
+        QCPScatterStyle style;
+        style.setShape(QCPScatterStyle::ssDisc);
+        style.setSize(1);
+        style.setPen(QPen(Qt::black));
+        rescale_flag = true;
+        plot(style, 0, getX(), getY());
     }
-    ui->cbox_x->setCurrentIndex(0);
-    ui->cbox_y->setCurrentIndex(1);
-
-    setDataFromParam(ui->cbox_x->currentIndex(),ui->cbox_y->currentIndex());
-
-    //qDebug() << x[1];
-
-    QCPScatterStyle style;
-    style.setShape(QCPScatterStyle::ssDisc);
-    style.setSize(1);
-    style.setPen(QPen(Qt::black));
-
-    plot(style, 0, getX(), getY());
-
 }
 
 void MainWindow::on_cbox_x_activated(const QString &arg1)

@@ -31,7 +31,7 @@ PlotWindow::PlotWindow(QWidget *parent, QList<QString> params, QVector<QVector<f
     btn_navigate = new QPushButton("Navigate",button_box);
     btn_ellipse = new QPushButton("Ellipse",button_box);
     btn_free_form = new QPushButton("Free form",button_box);
-    btn_resolution = new QPushButton("High/low resolution",button_box);
+    btn_resolution = new QPushButton("Res",button_box);
 
     cbox_x = new QComboBox(button_box);
     cbox_y = new QComboBox(button_box);
@@ -120,7 +120,6 @@ void PlotWindow::clearData()
 void PlotWindow::setDataFromParam(int x_param, int y_param)
 {
     clearData();
-    qDebug() << data.length();
     for (int i=0; i<data.length(); i++)
     {
         addPoint(data[i][x_param], data[i][y_param]);
