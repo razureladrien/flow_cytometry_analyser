@@ -581,6 +581,8 @@ void MainWindow::on_actionOpen_triggered()
     {
         plot_windows[p]->close_window();
     }
+    plot_windows.clear();
+
     QStringList file = QFileDialog::getOpenFileNames(this, tr("Open File"),"/flowData",tr("CSV/FCS Files (*.csv *.fcs)"));
     if (!file.empty())
     {
@@ -609,6 +611,7 @@ void MainWindow::on_actionOpen_triggered()
         style.setPen(QPen(Qt::black));
         rescale_flag = true;
         plot(style, 0, getX(), getY());
+        qDebug() << plot_windows.length();
     }
 }
 
@@ -638,8 +641,8 @@ void MainWindow::on_cbox_y_activated(const QString &arg1)
 
 void MainWindow::on_actionAdd_plot_triggered()
 {
+    qDebug() << plot_windows.length();
     number_of_plots ++;
-    qDebug()<<number_of_plots;
     PlotWindow *p = new PlotWindow(this, parameters, data);
     if (number_of_plots < 3)
         ui->gridLayout->addWidget(p->getWindow(),0,number_of_plots);
@@ -653,4 +656,5 @@ void MainWindow::on_actionAdd_plot_triggered()
 void MainWindow::plot_deleted()
 {
     number_of_plots --;
+    plot_windows.pop_back();
 }
