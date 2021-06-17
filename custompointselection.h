@@ -8,22 +8,23 @@
 class CustomPointSelection
 {
 private:
+    QList<int> selection_keys;
     QVector<double> select_x, select_y;
     QVector<double> verteces_x, verteces_y;
 public:
     CustomPointSelection();
     ~CustomPointSelection();
 
-    QVector<QVector<double>> getSelectionPoints();
+    QList<int> getSelectionPoints() {return selection_keys;}
     QVector<QVector<double>> getVerteces();
 
-    void addSelectionPoint(double x, double y);
+    void addSelectionPoint(int key);
     void addVertex(double x, double y);
     void clearVerteces();
     void clearSelectionPoints();
 
-    void pointsInEllipse(QCPItemEllipse *ellipse, QVector<double> vec_x, QVector<double> vec_y);
-    void pointsInPoly(QVector<double> vec_x, QVector<double> vec_y);
+    void pointsInEllipse(QCPItemEllipse *ellipse, QMap<int, QVector<double>> data);
+    //void pointsInPoly(QVector<double> vec_x, QVector<double> vec_y);
 };
 
 #endif // CUSTOMPOINTSELECTION_H

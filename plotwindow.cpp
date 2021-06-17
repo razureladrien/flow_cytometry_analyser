@@ -53,7 +53,7 @@ PlotWindow::PlotWindow(QWidget *parent, QList<QString> params, QVector<QVector<f
     style.setSize(1);
     style.setPen(QPen(Qt::black));
 
-    plot(style, 0, getX(), getY());
+    plot(style, 0, data_dic);
 
     buttonLayout->addWidget(btn_zoom);
     buttonLayout->addWidget(btn_navigate);
@@ -80,8 +80,14 @@ PlotWindow::PlotWindow(QWidget *parent, QList<QString> params, QVector<QVector<f
     connect(close_btn, SIGNAL(released()), SLOT(close_window()));
     connect(btn_zoom, SIGNAL(clicked()), SLOT(on_btn_zoom_clicked()));
     connect(btn_navigate, SIGNAL(clicked()), SLOT(on_btn_navigate_clicked()));
+    connect(btn_ellipse, SIGNAL(clicked()), SLOT(on_btn_ellipse_clicked()));
+
     connect(cbox_x, SIGNAL(activated(int)), SLOT(on_cbox_x_activated()));
     connect(cbox_y, SIGNAL(activated(int)), SLOT(on_cbox_y_activated()));
+
+    connect(getPlot(), SIGNAL(mousePress(QMouseEvent*)), SLOT(startEllipseSelection(QMouseEvent*)));
+    connect(getPlot(), SIGNAL(mouseMove(QMouseEvent*)), SLOT(moveEllipseSelection(QMouseEvent*)));
+    connect(getPlot(), SIGNAL(mouseRelease(QMouseEvent*)), SLOT(endEllipseSelection(QMouseEvent*)));
 }
 
 PlotWindow::~PlotWindow()
@@ -105,16 +111,14 @@ void PlotWindow::close_window()
     delete(this);
 }
 
-void PlotWindow::addPoint(double x, double y)
+void PlotWindow::addPoint(int key, double x, double y)
 {
-    qv_x.append(x);
-    qv_y.append(y);
+    data_dic.insert(key, {x,y});
 }
 
 void PlotWindow::clearData()
 {
-    qv_x.clear();
-    qv_y.clear();
+    data_dic.clear();
 }
 
 void PlotWindow::setDataFromParam(int x_param, int y_param)
@@ -122,14 +126,25 @@ void PlotWindow::setDataFromParam(int x_param, int y_param)
     clearData();
     for (int i=0; i<data.length(); i++)
     {
-        addPoint(data[i][x_param], data[i][y_param]);
+        addPoint(i, data[i][x_param], data[i][y_param]);
     }
 }
 
 
 /* scatter plot function to plot [x,y] on the graph graph_id */
-void PlotWindow::plot(QCPScatterStyle scatterStyle, double graph_id, QVector<double> x, QVector<double> y)
+/* input : QMap */
+void PlotWindow::plot(QCPScatterStyle scatterStyle, double graph_id, QMap<int, QVector<double>> qv_data)//QVector<double> x, QVector<double> y)
 {
+
+    QVector<double> x,y;
+    QList<QVector<double>> values = qv_data.values();
+
+    for (int i=0; i<values.length(); i++)
+    {
+        x.append(values[i][0]);
+        y.append(values[i][1]);
+    }
+
     getPlot()->graph(graph_id)->setData(x, y);
 
     /* scale the axis for the first display */
@@ -137,8 +152,39 @@ void PlotWindow::plot(QCPScatterStyle scatterStyle, double graph_id, QVector<dou
     {
         getPlot()->graph(graph_id)->rescaleAxes(true);
         rescale_flag = false;
-        qv_x_to_plot = qv_x;
-        qv_y_to_plot = qv_y;
+    }
+    getPlot()->graph(graph_id)->setScatterStyle(scatterStyle);
+    getPlot()->graph(graph_id)->setLineStyle(QCPGraph::lsNone);
+    getPlot()->replot();
+    getPlot()->update();
+
+}
+
+/* scatter plot function to plot [x,y] on the graph graph_id */
+/* input : QMap */
+void PlotWindow::plot_values(QCPScatterStyle scatterStyle, double graph_id, QList<int> keys)//QVector<double> x, QVector<double> y)
+{
+
+    QVector<double> x,y;
+    QList<QVector<double>> values = {};
+    for (int i=0; i<keys.length(); i++)
+    {
+        values.append(data_dic[i]);
+    }
+
+    for (int i=0; i<values.length(); i++)
+    {
+        x.append(values[i][0]);
+        y.append(values[i][1]);
+    }
+
+    getPlot()->graph(graph_id)->setData(x, y);
+
+    /* scale the axis for the first display */
+    if (rescale_flag)
+    {
+        getPlot()->graph(graph_id)->rescaleAxes(true);
+        rescale_flag = false;
     }
     getPlot()->graph(graph_id)->setScatterStyle(scatterStyle);
     getPlot()->graph(graph_id)->setLineStyle(QCPGraph::lsNone);
@@ -152,7 +198,7 @@ void PlotWindow::setParameters(QList<QString> p)
     parameters = p;
 }
 
-void PlotWindow::setData(QVector<QVector<float> > d)
+void PlotWindow::setData(QVector<QVector<float>> d)
 {
     data = d;
 }
@@ -160,6 +206,7 @@ void PlotWindow::setData(QVector<QVector<float> > d)
 
 void PlotWindow::on_btn_zoom_clicked()
 {
+    getPlot()->setCursor(Qt::CrossCursor);
     /* disable ellipse and free form selection */
     ellipse_select = false;
     free_form_select = false;
@@ -171,8 +218,8 @@ void PlotWindow::on_btn_zoom_clicked()
         ellipse->topLeft->setCoords(0,0);
         ellipse->bottomRight->setCoords(0,0);
         selectionObj->clearSelectionPoints();
-        plot(QCPScatterStyle(QCPScatterStyle::ssDisc, Qt::black, 1), 0, getX(),getY());
-        plot(QCPScatterStyle(QCPScatterStyle::ssDisc, Qt::black, 1), 1, selectionObj->getSelectionPoints()[0],selectionObj->getSelectionPoints()[1]);
+        plot(QCPScatterStyle(QCPScatterStyle::ssDisc, Qt::black, 1), 0, data_dic);
+        //plot(QCPScatterStyle(QCPScatterStyle::ssDisc, Qt::black, 1), 1, selectionObj->getSelectionPoints()[0],selectionObj->getSelectionPoints()[1]);
     }
 
     /* set zoom interaction */
@@ -183,14 +230,15 @@ void PlotWindow::on_btn_zoom_clicked()
 
 void PlotWindow::on_btn_navigate_clicked()
 {
+    getPlot()->setCursor(Qt::SizeAllCursor);
     /* disable ellipse and free form selection */
     ellipse_select = false;
     free_form_select = false;
     while(!polygon.isEmpty())
         getPlot()->removeItem(polygon.takeFirst());
     selectionObj->clearSelectionPoints();
-    plot(QCPScatterStyle(QCPScatterStyle::ssDisc, Qt::black, 1), 0, getX(),getY());
-    plot(QCPScatterStyle(QCPScatterStyle::ssDisc, Qt::black, 1), 1, selectionObj->getSelectionPoints()[0],selectionObj->getSelectionPoints()[1]);
+    plot(QCPScatterStyle(QCPScatterStyle::ssDisc, Qt::black, 1), 0, data_dic);
+    //plot(QCPScatterStyle(QCPScatterStyle::ssDisc, Qt::black, 1), 1, selectionObj->getSelectionPoints()[0],selectionObj->getSelectionPoints()[1]);
 
     if (ellipse != nullptr)
     {
@@ -204,6 +252,73 @@ void PlotWindow::on_btn_navigate_clicked()
     getPlot()->setSelectionRectMode(QCP::srmNone);
 }
 
+void PlotWindow::on_btn_ellipse_clicked()
+{
+    /* reset ellipse when clicking on button and disable free form selection*/
+    if (ellipse != nullptr)
+    {
+        ellipse->topLeft->setCoords(0,0);
+        ellipse->bottomRight->setCoords(0,0);
+        selectionObj->clearSelectionPoints();
+        getPlot()->layer("selectionLayer")->replot();
+
+    /* if first time clicking on button then instanciate ellipse */
+    } else {
+        ellipse = new QCPItemEllipse(getPlot());
+        ellipse->setLayer("selectionLayer");
+    }
+
+    ellipse_select = true;
+    free_form_select = false;
+    while(!polygon.isEmpty())
+        getPlot()->removeItem(polygon.takeFirst());
+
+    ellipse->setPen(QPen(QBrush(Qt::red), 0, Qt::DashLine));
+    getPlot()->setInteraction(QCP::iRangeDrag, false);
+    getPlot()->setInteraction(QCP::iRangeZoom, false);
+    getPlot()->setSelectionRectMode(QCP::srmNone);
+    plot(QCPScatterStyle(QCPScatterStyle::ssDisc, Qt::black, 1), 0, data_dic);
+}
+
+void PlotWindow::startEllipseSelection(QMouseEvent *event)
+{
+    if (ellipse_select)
+    {
+    eActive = true;
+    double x_pos = getPlot()->xAxis->pixelToCoord(event->pos().x());
+    double y_pos = getPlot()->yAxis->pixelToCoord(event->pos().y());
+    ellipse->topLeft->setCoords(x_pos, y_pos);
+    ellipse->bottomRight->setCoords(x_pos, y_pos);
+    }
+}
+
+void PlotWindow::moveEllipseSelection(QMouseEvent *event)
+{
+    if (ellipse_select && eActive)
+    {
+        double x_pos = getPlot()->xAxis->pixelToCoord(event->pos().x());
+        double y_pos = getPlot()->yAxis->pixelToCoord(event->pos().y());
+        ellipse->bottomRight->setCoords(x_pos, y_pos);
+        getPlot()->layer("selectionLayer")->replot();
+    }
+}
+
+void PlotWindow::endEllipseSelection(QMouseEvent *event)
+{
+    if (ellipse_select && eActive)
+    {
+        double x_pos = getPlot()->xAxis->pixelToCoord(event->pos().x());
+        double y_pos = getPlot()->yAxis->pixelToCoord(event->pos().y());
+        ellipse->bottomRight->setCoords(x_pos, y_pos);
+        eActive = false;
+        selectionObj->pointsInEllipse(ellipse, data_dic);
+
+        emit ellipse_selection_closed(selectionObj->getSelectionPoints());
+        //plot(QCPScatterStyle(QCPScatterStyle::ssDisc, Qt::gray, 1), 0, getX(),getY());
+        //plot(QCPScatterStyle(QCPScatterStyle::ssDisc, Qt::black, 1), 1, selectionObj->getSelectionPoints()[0],selectionObj->getSelectionPoints()[1]);
+    }
+}
+
 void PlotWindow::on_cbox_x_activated()
 {
     setDataFromParam(cbox_x->currentIndex(),cbox_y->currentIndex());
@@ -212,7 +327,7 @@ void PlotWindow::on_cbox_x_activated()
     style.setSize(1);
     style.setPen(QPen(Qt::black));
 
-    plot(style, 0, getX(), getY());
+    plot(style, 0, data_dic);
     getPlot()->graph(0)->rescaleAxes(true);
 }
 
@@ -224,6 +339,6 @@ void PlotWindow::on_cbox_y_activated()
     style.setSize(1);
     style.setPen(QPen(Qt::black));
 
-    plot(style, 0, getX(), getY());
+    plot(style, 0, data_dic);
     getPlot()->graph(0)->rescaleAxes(true);
 }

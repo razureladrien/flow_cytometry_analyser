@@ -15,26 +15,26 @@ public:
     QGroupBox* getWindow();
     QCustomPlot* getPlot();
 
-    void addPoint(double x, double y);
+    void addPoint(int key, double x, double y);
     void clearData();
-    void plot(QCPScatterStyle scatterStyle,double graph_id, QVector<double> x, QVector<double> y);
+    void plot(QCPScatterStyle scatterStyle,double graph_id, QMap<int, QVector<double>> qv_data);//QVector<double> x, QVector<double> y);
+    void plot_values(QCPScatterStyle scatterStyle, double graph_id, QList<int> keys);
 
-    QVector<double> getX() {return qv_x; };
-    QVector<double> getY() {return qv_y; };
     void setParameters(QList<QString> p);
     void setData(QVector<QVector<float>> d);
 
     void setDataFromParam(int x_param, int y_param);
+
 public slots:
     void close_window();
     void on_btn_zoom_clicked();
     void on_btn_navigate_clicked();
-//    void on_btn_ellipse_clicked();
-//    void on_btn_free_form_clicked();
+    void on_btn_ellipse_clicked();
+    //void on_btn_free_form_clicked();
 
-//    void startEllipseSelection(QMouseEvent *event);
-//    void moveEllipseSelection(QMouseEvent *event);
-//    void endEllipseSelection(QMouseEvent *event);
+    void startEllipseSelection(QMouseEvent *event);
+    void moveEllipseSelection(QMouseEvent *event);
+    void endEllipseSelection(QMouseEvent *event);
 
 //    void startEndLine(QMouseEvent *event);
 //    void moveLine(QMouseEvent *event);
@@ -48,6 +48,7 @@ public slots:
 
 signals:
     void deleted();
+    void ellipse_selection_closed(QList<int> selection);
 
 private:
     QCustomPlot *plot_widget;
@@ -58,14 +59,16 @@ private:
     QPushButton *btn_zoom, *btn_navigate, *btn_ellipse, *btn_free_form, *btn_resolution, *close_btn;
     QComboBox *cbox_x, *cbox_y;
 
-    QVector<double> qv_x, qv_y;
     QVector<double> qv_x_to_plot, qv_y_to_plot;
 
     QString xscale = "lin";
     QString yscale = "lin";
 
-     QList<QString> parameters;
-     QVector<QVector<float>> data;
+    QList<QString> parameters;
+    QVector<QVector<float>> data;
+
+    QMap<int, QVector<double>> data_dic;
+
 
 
     bool eActive=false;
