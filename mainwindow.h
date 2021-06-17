@@ -34,27 +34,27 @@ protected:
 
 
 private slots:
-    void on_btn_zoom_clicked();
-    void on_btn_navigate_clicked();
-    void on_btn_ellipse_clicked();
-    void on_btn_free_form_clicked();
+//    void on_btn_zoom_clicked();
+//    void on_btn_navigate_clicked();
+//    void on_btn_ellipse_clicked();
+//    void on_btn_free_form_clicked();
 
-    void startEllipseSelection(QMouseEvent *event);
-    void moveEllipseSelection(QMouseEvent *event);
-    void endEllipseSelection(QMouseEvent *event);
+//    void startEllipseSelection(QMouseEvent *event);
+//    void moveEllipseSelection(QMouseEvent *event);
+//    void endEllipseSelection(QMouseEvent *event);
 
-    void startEndLine(QMouseEvent *event);
-    void moveLine(QMouseEvent *event);
+//    void startEndLine(QMouseEvent *event);
+//    void moveLine(QMouseEvent *event);
 
-    void axisScale(QMouseEvent *event);
+//    void axisScale(QMouseEvent *event);
 
-    void on_btn_resolution_clicked();
+//    void on_btn_resolution_clicked();
 
     void on_actionOpen_triggered();
 
-    void on_cbox_x_activated(const QString &arg1);
+//    void on_cbox_x_activated(const QString &arg1);
 
-    void on_cbox_y_activated(const QString &arg1);
+//    void on_cbox_y_activated(const QString &arg1);
 
     void on_actionAdd_plot_triggered();
 

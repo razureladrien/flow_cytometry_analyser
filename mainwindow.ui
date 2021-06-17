@@ -22,60 +22,7 @@
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="verticalLayout">
     <item>
-     <layout class="QGridLayout" name="gridLayout">
-      <item row="0" column="0">
-       <layout class="QVBoxLayout" name="verticalLayout_3">
-        <item>
-         <widget class="QCustomPlot" name="plot" native="true"/>
-        </item>
-        <item>
-         <layout class="QHBoxLayout" name="horizontalLayout">
-          <item>
-           <widget class="QPushButton" name="btn_zoom">
-            <property name="text">
-             <string>Zoom</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QPushButton" name="btn_navigate">
-            <property name="text">
-             <string>Navigate</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QPushButton" name="btn_ellipse">
-            <property name="text">
-             <string>Ellipse Selection</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QPushButton" name="btn_free_form">
-            <property name="text">
-             <string>Free Form Selection</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QPushButton" name="btn_resolution">
-            <property name="text">
-             <string>High/Low Resolution</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QComboBox" name="cbox_x"/>
-          </item>
-          <item>
-           <widget class="QComboBox" name="cbox_y"/>
-          </item>
-         </layout>
-        </item>
-       </layout>
-      </item>
-     </layout>
+     <layout class="QGridLayout" name="gridLayout"/>
     </item>
    </layout>
   </widget>
@@ -134,14 +81,6 @@
    </property>
   </action>
  </widget>
- <customwidgets>
-  <customwidget>
-   <class>QCustomPlot</class>
-   <extends>QWidget</extends>
-   <header>qcustomplot.h</header>
-   <container>1</container>
-  </customwidget>
- </customwidgets>
  <resources/>
  <connections/>
 </ui>
