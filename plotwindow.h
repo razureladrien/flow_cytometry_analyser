@@ -30,14 +30,14 @@ public slots:
     void on_btn_zoom_clicked();
     void on_btn_navigate_clicked();
     void on_btn_ellipse_clicked();
-    //void on_btn_free_form_clicked();
+    void on_btn_free_form_clicked();
 
     void startEllipseSelection(QMouseEvent *event);
     void moveEllipseSelection(QMouseEvent *event);
     void endEllipseSelection(QMouseEvent *event);
 
-//    void startEndLine(QMouseEvent *event);
-//    void moveLine(QMouseEvent *event);
+    void startEndLine(QMouseEvent *event);
+    void moveLine(QMouseEvent *event);
 
 //    void axisScale(QMouseEvent *event);
 
@@ -49,6 +49,7 @@ public slots:
 signals:
     void deleted();
     void ellipse_selection_closed(QList<int> selection);
+    void free_selection_closed(QList<int> selection);
 
 private:
     QCustomPlot *plot_widget;

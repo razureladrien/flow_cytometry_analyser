@@ -462,7 +462,7 @@ void MainWindow::parseFileText(QString fileName)
     }
 
     file.close();
-    qDebug() << start_text << end_text << start_data << end_data << number_of_params << number_of_events << byte_order << data_type;
+    //qDebug() << start_text << end_text << start_data << end_data << number_of_params << number_of_events << byte_order << data_type;
 }
 
 
@@ -654,7 +654,8 @@ void MainWindow::on_actionAdd_plot_triggered()
     number_of_plots ++;
 
     connect(p, SIGNAL(deleted()), SLOT(plot_deleted()));
-    connect(p, SIGNAL(ellipse_selection_closed(QList<int>)), SLOT(ellipse_selection(QList<int>)));
+    connect(p, SIGNAL(ellipse_selection_closed(QList<int>)), SLOT(selection(QList<int>)));
+    connect(p, SIGNAL(free_selection_closed(QList<int>)), SLOT(selection(QList<int>)));
 }
 
 void MainWindow::plot_deleted()
@@ -663,7 +664,7 @@ void MainWindow::plot_deleted()
     plot_windows.pop_back();
 }
 
-void MainWindow::ellipse_selection(QList<int> keys)
+void MainWindow::selection(QList<int> keys)
 {
     //select in every plots
     for (int p=0; p<plot_windows.length(); p++)

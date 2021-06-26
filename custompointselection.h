@@ -24,7 +24,7 @@ public:
     void clearSelectionPoints();
 
     void pointsInEllipse(QCPItemEllipse *ellipse, QMap<int, QVector<double>> data);
-    //void pointsInPoly(QVector<double> vec_x, QVector<double> vec_y);
+    void pointsInPoly(QMap<int, QVector<double>> data);
 };
 
 #endif // CUSTOMPOINTSELECTION_H

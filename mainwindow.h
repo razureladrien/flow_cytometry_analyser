@@ -60,7 +60,7 @@ private slots:
 
     void plot_deleted();
 
-    void ellipse_selection(QList<int> keys);
+    void selection(QList<int> keys);
 
 private:
     Ui::MainWindow *ui;

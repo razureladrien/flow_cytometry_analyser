@@ -81,6 +81,7 @@ PlotWindow::PlotWindow(QWidget *parent, QList<QString> params, QVector<QVector<f
     connect(btn_zoom, SIGNAL(clicked()), SLOT(on_btn_zoom_clicked()));
     connect(btn_navigate, SIGNAL(clicked()), SLOT(on_btn_navigate_clicked()));
     connect(btn_ellipse, SIGNAL(clicked()), SLOT(on_btn_ellipse_clicked()));
+    connect(btn_free_form, SIGNAL(clicked()), SLOT(on_btn_free_form_clicked()));
 
     connect(cbox_x, SIGNAL(activated(int)), SLOT(on_cbox_x_activated()));
     connect(cbox_y, SIGNAL(activated(int)), SLOT(on_cbox_y_activated()));
@@ -88,6 +89,9 @@ PlotWindow::PlotWindow(QWidget *parent, QList<QString> params, QVector<QVector<f
     connect(getPlot(), SIGNAL(mousePress(QMouseEvent*)), SLOT(startEllipseSelection(QMouseEvent*)));
     connect(getPlot(), SIGNAL(mouseMove(QMouseEvent*)), SLOT(moveEllipseSelection(QMouseEvent*)));
     connect(getPlot(), SIGNAL(mouseRelease(QMouseEvent*)), SLOT(endEllipseSelection(QMouseEvent*)));
+
+    connect(getPlot(), SIGNAL(mousePress(QMouseEvent*)), SLOT(startEndLine(QMouseEvent*)));
+    connect(getPlot(), SIGNAL(mouseMove(QMouseEvent*)), SLOT(moveLine(QMouseEvent*)));
 }
 
 PlotWindow::~PlotWindow()
@@ -280,6 +284,30 @@ void PlotWindow::on_btn_ellipse_clicked()
     plot(QCPScatterStyle(QCPScatterStyle::ssDisc, Qt::black, 1), 0, data_dic);
 }
 
+void PlotWindow::on_btn_free_form_clicked()
+{
+    free_form_select = true;
+    ellipse_select = false;
+
+    if (ellipse != nullptr)
+    {
+        ellipse->topLeft->setCoords(0, 0);
+        ellipse->bottomRight->setCoords(0,0);
+    }
+
+    while(!polygon.isEmpty())
+        getPlot()->removeItem(polygon.takeFirst());
+
+    selectionObj->clearSelectionPoints();
+    getPlot()->graph(1)->data()->clear();
+    plot(QCPScatterStyle(QCPScatterStyle::ssDisc, Qt::black, 1), 0, data_dic);
+    //plot(QCPScatterStyle(QCPScatterStyle::ssDisc, Qt::black, 1), 1, selectionObj->getSelectionPoints()[0],selectionObj->getSelectionPoints()[1]);
+
+    getPlot()->setInteraction(QCP::iRangeDrag, false);
+    getPlot()->setInteraction(QCP::iRangeZoom, false);
+    getPlot()->setSelectionRectMode(QCP::srmNone);
+}
+
 void PlotWindow::startEllipseSelection(QMouseEvent *event)
 {
     if (ellipse_select)
@@ -319,6 +347,101 @@ void PlotWindow::endEllipseSelection(QMouseEvent *event)
     }
 }
 
+void PlotWindow::startEndLine(QMouseEvent *event)
+{
+    double x_pos = getPlot()->xAxis->pixelToCoord(event->pos().x());
+    double y_pos = getPlot()->yAxis->pixelToCoord(event->pos().y());
+
+    /* selection started*/
+    if (free_form_select && !lActive)
+    {
+        /* clear all lines registered from the previous selection.
+        It's a reset */
+        selectionObj->clearVerteces();
+        while(!polygon.isEmpty())
+            getPlot()->removeItem(polygon.takeFirst());
+
+        /* Create the first line and compute the little cicle around
+        the first point so it makes the selection feature easier to close */
+
+        line = new QCPItemLine(getPlot());
+        line->setPen(QPen(QBrush(Qt::red), 1, Qt::DashLine));
+        line->start->setCoords(x_pos, y_pos);
+        line->end->setCoords(x_pos, y_pos);
+        line->setLayer("selectionLayer");
+        getPlot()->replot();
+
+        polygon.append(line);
+        poly_closed->setPen(Qt::NoPen);
+
+        radius_x = (getPlot()->xAxis->range().upper - getPlot()->xAxis->range().lower)/200;
+        radius_y = (getPlot()->yAxis->range().upper - getPlot()->yAxis->range().lower)/130;
+        double a = x_pos-radius_x;
+        double b = y_pos+radius_y;
+        double c = x_pos+radius_x;
+        double d = y_pos-radius_y;
+        start_v_x = x_pos;
+        start_v_y = y_pos;
+
+        poly_closed->topLeft->setCoords(a, b);
+        poly_closed->bottomRight->setCoords(c,d);
+
+        lActive = true;
+        selectionObj->addVertex(x_pos, y_pos);
+        started_line = true;
+
+    /* selection ended */
+    } else if ( ( ((x_pos-start_v_x)*(x_pos-start_v_x) / (radius_x*radius_x) + (y_pos-start_v_y)*(y_pos-start_v_y) / (radius_y*radius_y)) <= 1) && free_form_select && lActive) {
+        line->end->setCoords(start_v_x, start_v_y);
+        selectionObj->addVertex(start_v_x, start_v_y);
+        lActive = false;
+        poly_closed->setBrush(Qt::NoBrush);
+//        int t = clock();
+        selectionObj->pointsInPoly(data_dic);
+        emit free_selection_closed(selectionObj->getSelectionPoints());
+//        t = clock()-t;
+//        qDebug() << t;
+        //plot(QCPScatterStyle(QCPScatterStyle::ssDisc, Qt::gray, 1), 0, getX(),getY());
+        //plot(QCPScatterStyle(QCPScatterStyle::ssDisc, Qt::black, 1), 1, selectionObj->getSelectionPoints()[0],selectionObj->getSelectionPoints()[1]);
+
+    /* selection continuing */
+    } else if (free_form_select && lActive){
+        line = new QCPItemLine(getPlot());
+        line->setPen(QPen(QBrush(Qt::red), 1, Qt::DashLine));
+        line->start->setCoords(x_pos, y_pos);
+        line->end->setCoords(x_pos, y_pos);
+        line->setLayer("selectionLayer");
+        getPlot()->replot();
+
+        polygon.append(line);
+        selectionObj->addVertex(x_pos, y_pos);
+    }
+}
+
+void PlotWindow::moveLine(QMouseEvent *event)
+{
+    if (free_form_select && lActive)
+    {
+        double x_pos = getPlot()->xAxis->pixelToCoord(event->pos().x());
+        double y_pos = getPlot()->yAxis->pixelToCoord(event->pos().y());
+        line->end->setCoords(x_pos, y_pos);
+       // ui->plot->replot();
+
+        double x_c = selectionObj->getVerteces()[0][0];
+        double y_c = selectionObj->getVerteces()[1][0];
+
+        if ( (x_pos-x_c)*(x_pos-x_c) / (radius_x*radius_x) + (y_pos-y_c)*(y_pos-y_c) / (radius_y*radius_y) <= 1)
+        {
+            poly_closed->setBrush(Qt::red);
+            getPlot()->layer("selectionLayer")->replot();
+        } else {
+            poly_closed->setBrush(Qt::NoBrush);
+            getPlot()->layer("selectionLayer")->replot();
+        }
+
+    }
+}
+
 void PlotWindow::on_cbox_x_activated()
 {
     setDataFromParam(cbox_x->currentIndex(),cbox_y->currentIndex());
@@ -329,6 +452,7 @@ void PlotWindow::on_cbox_x_activated()
 
     plot(style, 0, data_dic);
     getPlot()->graph(0)->rescaleAxes(true);
+    getPlot()->replot();
 }
 
 void PlotWindow::on_cbox_y_activated()
@@ -341,4 +465,5 @@ void PlotWindow::on_cbox_y_activated()
 
     plot(style, 0, data_dic);
     getPlot()->graph(0)->rescaleAxes(true);
+    getPlot()->replot();
 }
