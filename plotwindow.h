@@ -15,6 +15,7 @@ public:
     QGroupBox* getWindow();
     QCustomPlot* getPlot();
     QMap<int, QVector<double>> getData() {return data_dic;};
+    CustomPointSelection* getSelection() {return selectionObj;};
 
     void addPoint(int key, double x, double y);
     void clearData();
@@ -25,6 +26,8 @@ public:
     void setData(QVector<QVector<float>> d);
 
     void setDataFromParam(int x_param, int y_param);
+
+    QMap<int, QVector<double> > removeNonUnique(QMap<int, QVector<double> > map1, QList<int> keys);
 
 public slots:
     void close_window();
@@ -70,6 +73,7 @@ private:
     QVector<QVector<float>> data;
 
     QMap<int, QVector<double>> data_dic;
+    QMap<int, QVector<double>> data_dic_low_res;
 
 
 

@@ -44,6 +44,11 @@ void CustomPointSelection::clearSelectionPoints()
     select_y.clear();
 }
 
+void CustomPointSelection::setKeys(QList<int> keys)
+{
+    selection_keys = keys;
+}
+
 void CustomPointSelection::pointsInEllipse(QCPItemEllipse *ellipse, QMap<int, QVector<double>> data)
 {
     clearSelectionPoints();

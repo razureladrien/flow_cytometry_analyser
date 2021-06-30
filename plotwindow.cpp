@@ -385,8 +385,6 @@ void PlotWindow::startEndLine(QMouseEvent *event)
         /* circle that when clicked on, free selection is ended and points selected revealed */
         radius_x = (getPlot()->xAxis->range().upper - getPlot()->xAxis->range().lower)/plot_widget->size().width()*5;
         radius_y = (getPlot()->yAxis->range().upper - getPlot()->yAxis->range().lower)/plot_widget->size().height()*5;
-        qDebug() << radius_x << radius_y;
-        qDebug() << plot_widget->size();
         double a = x_pos-radius_x;
         double b = y_pos+radius_y;
         double c = x_pos+radius_x;
@@ -461,7 +459,6 @@ void PlotWindow::moveLine(QMouseEvent *event)
 
 void PlotWindow::on_cbox_x_activated()
 {
-    selectionObj->clearSelectionPoints();
     getPlot()->graph(1)->data()->clear();
     setDataFromParam(cbox_x->currentIndex(),cbox_y->currentIndex());
     QCPScatterStyle style;
@@ -469,14 +466,15 @@ void PlotWindow::on_cbox_x_activated()
     style.setSize(1);
     style.setPen(QPen(Qt::black));
 
-    plot(style, 0, data_dic);
+    QMap<int, QVector<double>> plot_data = removeNonUnique(getData(),selectionObj->getSelectionPoints());
+    plot(style, 0, plot_data);
+    plot_values(QCPScatterStyle(QCPScatterStyle::ssDisc, Qt::red, 2),1,selectionObj->getSelectionPoints());
     getPlot()->graph(0)->rescaleAxes(true);
     getPlot()->replot();
 }
 
 void PlotWindow::on_cbox_y_activated()
 {
-    selectionObj->clearSelectionPoints();
     getPlot()->graph(1)->data()->clear();
     setDataFromParam(cbox_x->currentIndex(),cbox_y->currentIndex());
     QCPScatterStyle style;
@@ -484,7 +482,21 @@ void PlotWindow::on_cbox_y_activated()
     style.setSize(1);
     style.setPen(QPen(Qt::black));
 
-    plot(style, 0, data_dic);
+    QMap<int, QVector<double>> plot_data = removeNonUnique(getData(),selectionObj->getSelectionPoints());
+    plot(style, 0, plot_data);
+    plot_values(QCPScatterStyle(QCPScatterStyle::ssDisc, Qt::red, 2),1,selectionObj->getSelectionPoints());
     getPlot()->graph(0)->rescaleAxes(true);
     getPlot()->replot();
+}
+
+
+QMap<int, QVector<double>> PlotWindow::removeNonUnique(QMap<int, QVector<double>> map1, QList<int> keys)
+{
+    QMap<int, QVector<double>> unique_map = map1;
+    for (auto k: keys)
+    {
+        if(map1.contains(k))
+            unique_map.remove(k);
+    }
+    return unique_map;
 }

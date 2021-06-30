@@ -22,6 +22,7 @@ public:
     void addVertex(double x, double y);
     void clearVerteces();
     void clearSelectionPoints();
+    void setKeys(QList<int> keys);
 
     void pointsInEllipse(QCPItemEllipse *ellipse, QMap<int, QVector<double>> data);
     void pointsInPoly(QMap<int, QVector<double>> data);
