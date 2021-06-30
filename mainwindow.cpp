@@ -645,17 +645,23 @@ void MainWindow::on_actionOpen_triggered()
 
 void MainWindow::on_actionAdd_plot_triggered()
 {
-    PlotWindow *p = new PlotWindow(this, parameters, data);
-    if (number_of_plots < 3)
-        ui->gridLayout->addWidget(p->getWindow(),0,number_of_plots);
-    else if (number_of_plots >= 3)
-        ui->gridLayout->addWidget(p->getWindow(),1,number_of_plots-3);
-    plot_windows.append(p); // keep every plot in a list
-    number_of_plots ++;
+    if (number_of_plots == 6)
+    {
+        QErrorMessage* errorMessageDialog = new QErrorMessage(this);
+        errorMessageDialog->showMessage("The number of plots cannot exceed 6");
+    } else if (number_of_plots < 6) {
+        PlotWindow *p = new PlotWindow(this, parameters, data);
+        if (number_of_plots < 3)
+            ui->gridLayout->addWidget(p->getWindow(),0,number_of_plots);
+        else if (number_of_plots >= 3)
+            ui->gridLayout->addWidget(p->getWindow(),1,number_of_plots-3);
+        plot_windows.append(p); // keep every plot in a list
+        number_of_plots ++;
 
-    connect(p, SIGNAL(deleted()), SLOT(plot_deleted()));
-    connect(p, SIGNAL(ellipse_selection_closed(QList<int>)), SLOT(selection(QList<int>)));
-    connect(p, SIGNAL(free_selection_closed(QList<int>)), SLOT(selection(QList<int>)));
+        connect(p, SIGNAL(deleted()), SLOT(plot_deleted()));
+        connect(p, SIGNAL(ellipse_selection_closed(QList<int>)), SLOT(selection(QList<int>)));
+        connect(p, SIGNAL(free_selection_closed(QList<int>)), SLOT(selection(QList<int>)));
+    }
 }
 
 void MainWindow::plot_deleted()
@@ -669,6 +675,19 @@ void MainWindow::selection(QList<int> keys)
     //select in every plots
     for (int p=0; p<plot_windows.length(); p++)
     {
-        plot_windows[p]->plot_values(QCPScatterStyle(QCPScatterStyle::ssDisc, Qt::red, 3),1,keys);
+        QMap<int, QVector<double>> plot_data = removeNonUnique(plot_windows[p]->getData(),keys);
+        plot_windows[p]->plot(QCPScatterStyle(QCPScatterStyle::ssDisc, Qt::black, 1),0,plot_data);
+        plot_windows[p]->plot_values(QCPScatterStyle(QCPScatterStyle::ssDisc, Qt::red, 2),1,keys);
     }
+}
+
+QMap<int, QVector<double>> MainWindow::removeNonUnique(QMap<int, QVector<double>> map1, QList<int> keys)
+{
+    QMap<int, QVector<double>> unique_map = map1;
+    for (auto k: keys)
+    {
+        if(map1.contains(k))
+            unique_map.remove(k);
+    }
+    return unique_map;
 }

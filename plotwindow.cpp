@@ -222,7 +222,7 @@ void PlotWindow::on_btn_zoom_clicked()
         ellipse->topLeft->setCoords(0,0);
         ellipse->bottomRight->setCoords(0,0);
         selectionObj->clearSelectionPoints();
-        plot(QCPScatterStyle(QCPScatterStyle::ssDisc, Qt::black, 1), 0, data_dic);
+        //plot(QCPScatterStyle(QCPScatterStyle::ssDisc, Qt::black, 1), 0, data_dic);
         //plot(QCPScatterStyle(QCPScatterStyle::ssDisc, Qt::black, 1), 1, selectionObj->getSelectionPoints()[0],selectionObj->getSelectionPoints()[1]);
     }
 
@@ -241,7 +241,7 @@ void PlotWindow::on_btn_navigate_clicked()
     while(!polygon.isEmpty())
         getPlot()->removeItem(polygon.takeFirst());
     selectionObj->clearSelectionPoints();
-    plot(QCPScatterStyle(QCPScatterStyle::ssDisc, Qt::black, 1), 0, data_dic);
+    //plot(QCPScatterStyle(QCPScatterStyle::ssDisc, Qt::black, 1), 0, data_dic);
     //plot(QCPScatterStyle(QCPScatterStyle::ssDisc, Qt::black, 1), 1, selectionObj->getSelectionPoints()[0],selectionObj->getSelectionPoints()[1]);
 
     if (ellipse != nullptr)
@@ -258,13 +258,12 @@ void PlotWindow::on_btn_navigate_clicked()
 
 void PlotWindow::on_btn_ellipse_clicked()
 {
+    getPlot()->setCursor(Qt::ArrowCursor);
     /* reset ellipse when clicking on button and disable free form selection*/
     if (ellipse != nullptr)
     {
         ellipse->topLeft->setCoords(0,0);
         ellipse->bottomRight->setCoords(0,0);
-        selectionObj->clearSelectionPoints();
-        getPlot()->layer("selectionLayer")->replot();
 
     /* if first time clicking on button then instanciate ellipse */
     } else {
@@ -277,6 +276,8 @@ void PlotWindow::on_btn_ellipse_clicked()
     while(!polygon.isEmpty())
         getPlot()->removeItem(polygon.takeFirst());
 
+    selectionObj->clearSelectionPoints();
+    getPlot()->graph(1)->data()->clear();
     ellipse->setPen(QPen(QBrush(Qt::red), 0, Qt::DashLine));
     getPlot()->setInteraction(QCP::iRangeDrag, false);
     getPlot()->setInteraction(QCP::iRangeZoom, false);
@@ -286,6 +287,7 @@ void PlotWindow::on_btn_ellipse_clicked()
 
 void PlotWindow::on_btn_free_form_clicked()
 {
+    getPlot()->setCursor(Qt::ArrowCursor);
     free_form_select = true;
     ellipse_select = false;
 
@@ -341,6 +343,12 @@ void PlotWindow::endEllipseSelection(QMouseEvent *event)
         eActive = false;
         selectionObj->pointsInEllipse(ellipse, data_dic);
 
+        if (ellipse != nullptr)
+        {
+            ellipse->topLeft->setCoords(0, 0);
+            ellipse->bottomRight->setCoords(0,0);
+        }
+
         emit ellipse_selection_closed(selectionObj->getSelectionPoints());
         //plot(QCPScatterStyle(QCPScatterStyle::ssDisc, Qt::gray, 1), 0, getX(),getY());
         //plot(QCPScatterStyle(QCPScatterStyle::ssDisc, Qt::black, 1), 1, selectionObj->getSelectionPoints()[0],selectionObj->getSelectionPoints()[1]);
@@ -374,8 +382,11 @@ void PlotWindow::startEndLine(QMouseEvent *event)
         polygon.append(line);
         poly_closed->setPen(Qt::NoPen);
 
-        radius_x = (getPlot()->xAxis->range().upper - getPlot()->xAxis->range().lower)/200;
-        radius_y = (getPlot()->yAxis->range().upper - getPlot()->yAxis->range().lower)/130;
+        /* circle that when clicked on, free selection is ended and points selected revealed */
+        radius_x = (getPlot()->xAxis->range().upper - getPlot()->xAxis->range().lower)/plot_widget->size().width()*5;
+        radius_y = (getPlot()->yAxis->range().upper - getPlot()->yAxis->range().lower)/plot_widget->size().height()*5;
+        qDebug() << radius_x << radius_y;
+        qDebug() << plot_widget->size();
         double a = x_pos-radius_x;
         double b = y_pos+radius_y;
         double c = x_pos+radius_x;
@@ -398,6 +409,12 @@ void PlotWindow::startEndLine(QMouseEvent *event)
         poly_closed->setBrush(Qt::NoBrush);
 //        int t = clock();
         selectionObj->pointsInPoly(data_dic);
+
+        /* erase polygon on the plot */
+        while(!polygon.isEmpty())
+            getPlot()->removeItem(polygon.takeFirst());
+
+        /* send signal to mainwindow */
         emit free_selection_closed(selectionObj->getSelectionPoints());
 //        t = clock()-t;
 //        qDebug() << t;

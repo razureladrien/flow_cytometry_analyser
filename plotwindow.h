@@ -14,6 +14,7 @@ public:
 
     QGroupBox* getWindow();
     QCustomPlot* getPlot();
+    QMap<int, QVector<double>> getData() {return data_dic;};
 
     void addPoint(int key, double x, double y);
     void clearData();

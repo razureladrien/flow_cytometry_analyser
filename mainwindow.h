@@ -30,6 +30,7 @@ public:
     void parseFileText(QString fileName);
     void parseFileData(QString fileName);
 
+    QMap<int, QVector<double> > removeNonUnique(QMap<int, QVector<double> > map1, QList<int> keys);
 protected:
 
 
