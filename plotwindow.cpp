@@ -461,6 +461,8 @@ void PlotWindow::moveLine(QMouseEvent *event)
 
 void PlotWindow::on_cbox_x_activated()
 {
+    selectionObj->clearSelectionPoints();
+    getPlot()->graph(1)->data()->clear();
     setDataFromParam(cbox_x->currentIndex(),cbox_y->currentIndex());
     QCPScatterStyle style;
     style.setShape(QCPScatterStyle::ssDisc);
@@ -474,6 +476,8 @@ void PlotWindow::on_cbox_x_activated()
 
 void PlotWindow::on_cbox_y_activated()
 {
+    selectionObj->clearSelectionPoints();
+    getPlot()->graph(1)->data()->clear();
     setDataFromParam(cbox_x->currentIndex(),cbox_y->currentIndex());
     QCPScatterStyle style;
     style.setShape(QCPScatterStyle::ssDisc);
