@@ -25,13 +25,14 @@ PlotWindow::PlotWindow(QWidget *parent, QList<QString> params, QVector<QVector<f
     poly_closed->setLayer("selectionLayer");
 
     button_box = new QGroupBox(plot_box);
-    QHBoxLayout *buttonLayout = new QHBoxLayout;
+    QGridLayout *button_layout = new QGridLayout;
 
     btn_zoom = new QPushButton("Zoom",button_box);
     btn_navigate = new QPushButton("Navigate",button_box);
     btn_ellipse = new QPushButton("Ellipse",button_box);
     btn_free_form = new QPushButton("Free form",button_box);
-    btn_resolution = new QPushButton("Res",button_box);
+    btn_logx = new QCheckBox("x log scale", button_box);
+    btn_logy = new QCheckBox("y log scale", button_box);
 
     cbox_x = new QComboBox(button_box);
     cbox_y = new QComboBox(button_box);
@@ -55,16 +56,17 @@ PlotWindow::PlotWindow(QWidget *parent, QList<QString> params, QVector<QVector<f
 
     plot(style, 0, data_dic);
 
-    buttonLayout->addWidget(btn_zoom);
-    buttonLayout->addWidget(btn_navigate);
-    buttonLayout->addWidget(btn_ellipse);
-    buttonLayout->addWidget(btn_free_form);
-    buttonLayout->addWidget(btn_resolution);
-    buttonLayout->addWidget(cbox_x);
-    buttonLayout->addWidget(cbox_y);
-    buttonLayout->setSizeConstraint(QLayout::SetMaximumSize);
+    button_layout->addWidget(btn_zoom,0,0,2,1);
+    button_layout->addWidget(btn_navigate,0,1,2,1);
+    button_layout->addWidget(btn_ellipse,0,2,2,1);
+    button_layout->addWidget(btn_free_form,0,3,2,1);
+    button_layout->addWidget(cbox_x,0,4,2,1);
+    button_layout->addWidget(cbox_y,0,5,2,1);
+    button_layout->addWidget(btn_logx,0,6);
+    button_layout->addWidget(btn_logy,1,6);
+    button_layout->setSizeConstraint(QLayout::SetMaximumSize);
 
-    button_box->setLayout(buttonLayout);
+    button_box->setLayout(button_layout);
 
     layout->addWidget(plot_widget);
     layout->addWidget(button_box, 0);
@@ -92,6 +94,9 @@ PlotWindow::PlotWindow(QWidget *parent, QList<QString> params, QVector<QVector<f
 
     connect(getPlot(), SIGNAL(mousePress(QMouseEvent*)), SLOT(startEndLine(QMouseEvent*)));
     connect(getPlot(), SIGNAL(mouseMove(QMouseEvent*)), SLOT(moveLine(QMouseEvent*)));
+
+    connect(btn_logx, SIGNAL(stateChanged(int)), SLOT(axisScaleX(int)));
+    connect(btn_logy, SIGNAL(stateChanged(int)), SLOT(axisScaleY(int)));
 }
 
 PlotWindow::~PlotWindow()
@@ -499,4 +504,53 @@ QMap<int, QVector<double>> PlotWindow::removeNonUnique(QMap<int, QVector<double>
             unique_map.remove(k);
     }
     return unique_map;
+}
+
+
+void PlotWindow::axisScaleX(int s)
+{
+    if (s==2)
+    {
+        QSharedPointer<QCPAxisTickerLog> xlogTicker(new QCPAxisTickerLog);
+        getPlot()->xAxis->setScaleType(QCPAxis::stLogarithmic);
+        getPlot()->xAxis->setTicker(xlogTicker);
+        getPlot()->xAxis->setNumberFormat("eb");
+        getPlot()->xAxis->setNumberPrecision(0);
+        getPlot()->replot();
+        xscale = "log";
+    } else if (s==0)
+    {
+        QSharedPointer<QCPAxisTickerFixed> xfixedTicker(new QCPAxisTickerFixed);
+        getPlot()->xAxis->setScaleType(QCPAxis::stLinear);
+        getPlot()->xAxis->setTicker(xfixedTicker);
+        xfixedTicker->setTickStep(1.0); // tick step shall be 1.0
+        xfixedTicker->setScaleStrategy(QCPAxisTickerFixed::ssMultiples); // and no scaling of the tickstep (like multiples or powers) is allowed
+        getPlot()->xAxis->setNumberFormat("f");
+        xscale = "lin";
+        getPlot()->replot();
+    }
+}
+
+void PlotWindow::axisScaleY(int s)
+{
+    if (s==2)
+    {
+        QSharedPointer<QCPAxisTickerLog> ylogTicker(new QCPAxisTickerLog);
+        getPlot()->yAxis->setScaleType(QCPAxis::stLogarithmic);
+        getPlot()->yAxis->setTicker(ylogTicker);
+        getPlot()->yAxis->setNumberFormat("eb");
+        getPlot()->yAxis->setNumberPrecision(0);
+        getPlot()->replot();
+        yscale = "log";
+    } else if (s==0)
+    {
+        QSharedPointer<QCPAxisTickerFixed> yfixedTicker(new QCPAxisTickerFixed);
+        getPlot()->yAxis->setScaleType(QCPAxis::stLinear);
+        getPlot()->yAxis->setTicker(yfixedTicker);
+        yfixedTicker->setTickStep(1.0); // tick step shall be 1.0
+        yfixedTicker->setScaleStrategy(QCPAxisTickerFixed::ssMultiples); // and no scaling of the tickstep (like multiples or powers) is allowed
+        getPlot()->yAxis->setNumberFormat("f");
+        yscale = "lin";
+        getPlot()->replot();
+    }
 }

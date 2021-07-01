@@ -43,13 +43,13 @@ public slots:
     void startEndLine(QMouseEvent *event);
     void moveLine(QMouseEvent *event);
 
-//    void axisScale(QMouseEvent *event);
-
 //    void on_btn_resolution_clicked();
 
     void on_cbox_x_activated();
     void on_cbox_y_activated();
 
+    void axisScaleX(int s);
+    void axisScaleY(int s);
 signals:
     void deleted();
     void ellipse_selection_closed(QList<int> selection);
@@ -61,6 +61,7 @@ private:
     QGroupBox *plot_box;
     QSize size;
 
+    QCheckBox *btn_logx, *btn_logy;
     QPushButton *btn_zoom, *btn_navigate, *btn_ellipse, *btn_free_form, *btn_resolution, *close_btn;
     QComboBox *cbox_x, *cbox_y;
 
@@ -74,8 +75,6 @@ private:
 
     QMap<int, QVector<double>> data_dic;
     QMap<int, QVector<double>> data_dic_low_res;
-
-
 
     bool eActive=false;
     bool lActive=false;
