@@ -133,7 +133,7 @@ void CustomPointSelection::pointsInEllipse(QCPItemEllipse *ellipse, QMap<int, QV
     }
 }
 
-void CustomPointSelection::pointsInPoly(QMap<int, QVector<double>> data)
+void CustomPointSelection::pointsInPoly(QMap<int, QVector<double>> data, QString xscale, QString yscale)
 {
     // Copyright 2000 softSurfer, 2012 Dan Sunday
 
@@ -152,24 +152,97 @@ void CustomPointSelection::pointsInPoly(QMap<int, QVector<double>> data)
 
     /* x vector : data[i][0]
        y vector : data[i][1] */
-    for(auto i : data.keys())
-    {
 
-        int    cn = 0; // crossing number
-        if ( (x_min < data[i][0]) && (data[i][0] < x_max) && (y_min < data[i][1]) && (data[i][1] < y_max) )
+    if ((xscale == "log") & (yscale == "lin"))
+    {
+        for(auto i : data.keys())
         {
-            for (int j=0; j<n-1; j++)
+
+            int  cn = 0; // crossing number
+            if ( (log10(x_min) < log10(data[i][0])) && (log10(data[i][0]) < log10(x_max)) && (y_min < data[i][1]) && (data[i][1] < y_max) )
             {
-                if ( ((vert_y[j] <= data[i][1]) && (vert_y[j+1] > data[i][1]))     // upward crossing
-                        || ((vert_y[j] > data[i][1]) && (vert_y[j+1] <=  data[i][1])) ) // downward crossing
+                for (int j=0; j<n-1; j++)
                 {
-                    double vt = (data[i][1]  - vert_y[j]) / (vert_y[j+1] - vert_y[j]);
-                    if (data[i][0] <  vert_x[j] + vt * (vert_x[j+1] - vert_x[j]))
-                        cn ++;
+                    if ( ((vert_y[j] <= data[i][1]) && (vert_y[j+1] > data[i][1]))     // upward crossing
+                            || ((vert_y[j] > data[i][1]) && (vert_y[j+1] <=  data[i][1])) ) // downward crossing
+                    {
+                        double vt = (data[i][1]  - vert_y[j]) / (vert_y[j+1] - vert_y[j]);
+                        if (log10(data[i][0]) <  log10(vert_x[j]) + vt * (log10(vert_x[j+1]) - log10(vert_x[j])))
+                            cn ++;
+                    }
                 }
             }
+            if (cn&1)
+                addSelectionPoint(i);
         }
-        if (cn&1)
-            addSelectionPoint(i);
+    }
+    else if ((xscale == "lin") & (yscale == "log"))
+    {
+        for(auto i : data.keys())
+        {
+
+            int  cn = 0; // crossing number
+            if ( (x_min < data[i][0]) && (data[i][0] < x_max) && (log10(y_min) < log10(data[i][1])) && (log10(data[i][1]) < log10(y_max)) )
+            {
+                for (int j=0; j<n-1; j++)
+                {
+                    if ( ((log10(vert_y[j]) <= log10(data[i][1])) && (log10(vert_y[j+1]) > log10(data[i][1])))     // upward crossing
+                            || ((log10(vert_y[j]) > log10(data[i][1])) && (log10(vert_y[j+1]) <=  log10(data[i][1]))) ) // downward crossing
+                    {
+                        double vt = (log10(data[i][1])  - log10(vert_y[j])) / (log10(vert_y[j+1]) - log10(vert_y[j]));
+                        if (data[i][0] <  vert_x[j] + vt * (vert_x[j+1] - vert_x[j]))
+                            cn ++;
+                    }
+                }
+            }
+            if (cn&1)
+                addSelectionPoint(i);
+        }
+    }
+    else if ((xscale == "lin") & (yscale == "lin"))
+    {
+        for(auto i : data.keys())
+        {
+
+            int  cn = 0; // crossing number
+            if ( (x_min < data[i][0]) && (data[i][0] < x_max) && (y_min < data[i][1]) && (data[i][1] < y_max) )
+            {
+                for (int j=0; j<n-1; j++)
+                {
+                    if ( ((vert_y[j] <= data[i][1]) && (vert_y[j+1] > data[i][1]))     // upward crossing
+                            || ((vert_y[j] > data[i][1]) && (vert_y[j+1] <=  data[i][1])) ) // downward crossing
+                    {
+                        double vt = (data[i][1]  - vert_y[j]) / (vert_y[j+1] - vert_y[j]);
+                        if (data[i][0] <  vert_x[j] + vt * (vert_x[j+1] - vert_x[j]))
+                            cn ++;
+                    }
+                }
+            }
+            if (cn&1)
+                addSelectionPoint(i);
+        }
+    }
+    else if ((xscale == "log") & (yscale == "log"))
+    {
+        for(auto i : data.keys())
+        {
+
+            int  cn = 0; // crossing number
+            if ( (log10(x_min) < log10(data[i][0])) && (log10(data[i][0]) < log10(x_max)) && (log10(y_min) < log10(data[i][1])) && (log10(data[i][1]) < log10(y_max)) )
+            {
+                for (int j=0; j<n-1; j++)
+                {
+                    if ( ((log10(vert_y[j]) <= log10(data[i][1])) && (log10(vert_y[j+1]) > log10(data[i][1])))     // upward crossing
+                            || ((log10(vert_y[j]) > log10(data[i][1])) && (log10(vert_y[j+1]) <=  log10(data[i][1]))) ) // downward crossing
+                    {
+                        double vt = (log10(data[i][1])  - log10(vert_y[j])) / (log10(vert_y[j+1]) - log10(vert_y[j]));
+                        if (log10(data[i][0]) <  log10(vert_x[j]) + vt * (log10(vert_x[j+1]) - log10(vert_x[j])))
+                            cn ++;
+                    }
+                }
+            }
+            if (cn&1)
+                addSelectionPoint(i);
+        }
     }
 }

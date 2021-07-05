@@ -431,7 +431,7 @@ void PlotWindow::startEndLine(QMouseEvent *event)
         lActive = false;
         poly_closed->setBrush(Qt::NoBrush);
 //        int t = clock();
-        selectionObj->pointsInPoly(data_dic);
+        selectionObj->pointsInPoly(data_dic, xscale, yscale);
 
         /* erase polygon on the plot */
         while(!polygon.isEmpty())

@@ -25,7 +25,7 @@ public:
     void setKeys(QList<int> keys);
 
     void pointsInEllipse(QCPItemEllipse *ellipse, QMap<int, QVector<double>> data, QString xscale, QString yscale);
-    void pointsInPoly(QMap<int, QVector<double>> data);
+    void pointsInPoly(QMap<int, QVector<double>> data, QString xscale, QString yscale);
 };
 
 #endif // CUSTOMPOINTSELECTION_H
