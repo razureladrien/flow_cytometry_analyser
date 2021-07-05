@@ -18,9 +18,10 @@ PlotWindow::PlotWindow(QWidget *parent, QList<QString> params, QVector<QVector<f
     plot_widget->yAxis->setSelectableParts(QCPAxis::spAxis);
     plot_widget->addLayer("selectionLayer", 0, QCustomPlot::limAbove);
     plot_widget->layer("selectionLayer")->setMode(QCPLayer::lmBuffered);
+    plot_widget->setNoAntialiasingOnDrag(true);
 
     selectionObj = new CustomPointSelection();
-    poly_closed = new QCPItemEllipse(plot_widget);
+    poly_closed = new QCPItemEllipse(getPlot());
     poly_closed->setPen(Qt::NoPen);
     poly_closed->setLayer("selectionLayer");
 
@@ -346,7 +347,7 @@ void PlotWindow::endEllipseSelection(QMouseEvent *event)
         double y_pos = getPlot()->yAxis->pixelToCoord(event->pos().y());
         ellipse->bottomRight->setCoords(x_pos, y_pos);
         eActive = false;
-        selectionObj->pointsInEllipse(ellipse, data_dic);
+        selectionObj->pointsInEllipse(ellipse, data_dic, xscale, yscale);
 
         if (ellipse != nullptr)
         {
@@ -388,8 +389,27 @@ void PlotWindow::startEndLine(QMouseEvent *event)
         poly_closed->setPen(Qt::NoPen);
 
         /* circle that when clicked on, free selection is ended and points selected revealed */
-        radius_x = (getPlot()->xAxis->range().upper - getPlot()->xAxis->range().lower)/plot_widget->size().width()*5;
-        radius_y = (getPlot()->yAxis->range().upper - getPlot()->yAxis->range().lower)/plot_widget->size().height()*5;
+        if ((xscale == "lin") & (yscale == "lin"))
+        {
+            radius_x = qAbs((getPlot()->xAxis->range().upper - getPlot()->xAxis->range().lower)/plot_widget->size().width()*5);
+            radius_y = (getPlot()->yAxis->range().upper - getPlot()->yAxis->range().lower)/plot_widget->size().height()*5;
+        }
+        else if ((xscale == "log") & (yscale == "log"))
+        {
+            radius_x = qAbs(log10(getPlot()->xAxis->range().upper - getPlot()->xAxis->range().lower)/plot_widget->size().width()*20*x_pos); //pour le log (c'est scandaleux)
+            radius_y = qAbs(log10(getPlot()->yAxis->range().upper - getPlot()->yAxis->range().lower)/plot_widget->size().height()*20*y_pos);
+        }
+        else if ((xscale == "lin") & (yscale == "log"))
+        {
+            radius_x = qAbs((getPlot()->xAxis->range().upper - getPlot()->xAxis->range().lower)/plot_widget->size().width()*5);
+            radius_y = qAbs(log10(getPlot()->yAxis->range().upper - getPlot()->yAxis->range().lower)/plot_widget->size().height()*20*y_pos);
+        }
+        else if ((xscale == "log") & (yscale == "lin"))
+        {
+            radius_x = qAbs(log10(getPlot()->xAxis->range().upper - getPlot()->xAxis->range().lower)/plot_widget->size().width()*20*x_pos);
+            radius_y = qAbs((getPlot()->yAxis->range().upper - getPlot()->yAxis->range().lower)/plot_widget->size().height()*5);
+        }
+        qDebug() << radius_x;
         double a = x_pos-radius_x;
         double b = y_pos+radius_y;
         double c = x_pos+radius_x;

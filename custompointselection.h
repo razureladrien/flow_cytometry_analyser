@@ -24,7 +24,7 @@ public:
     void clearSelectionPoints();
     void setKeys(QList<int> keys);
 
-    void pointsInEllipse(QCPItemEllipse *ellipse, QMap<int, QVector<double>> data);
+    void pointsInEllipse(QCPItemEllipse *ellipse, QMap<int, QVector<double>> data, QString xscale, QString yscale);
     void pointsInPoly(QMap<int, QVector<double>> data);
 };
 

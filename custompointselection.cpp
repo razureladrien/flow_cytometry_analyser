@@ -49,27 +49,88 @@ void CustomPointSelection::setKeys(QList<int> keys)
     selection_keys = keys;
 }
 
-void CustomPointSelection::pointsInEllipse(QCPItemEllipse *ellipse, QMap<int, QVector<double>> data)
+void CustomPointSelection::pointsInEllipse(QCPItemEllipse *ellipse, QMap<int, QVector<double>> data, QString xscale, QString yscale)
 {
     clearSelectionPoints();
-
     QPointF top_left = ellipse->topLeft->coords();
     QPointF bot_right = ellipse->bottomRight->coords();
-    QPointF center = (top_left+bot_right)/2;
-    double semi_x_axis = qAbs(top_left.x()-bot_right.x())/2.0;
-    double semi_y_axis = qAbs(top_left.y()-bot_right.y())/2.0;
-    double x_h;
-    double y_k;
 
-    for (auto i : data.keys())
+    if ((xscale == "log") & (yscale == "lin"))
     {
-        x_h = data[i][0]-center.x();
-        y_k = data[i][1]-center.y();
-        if ((x_h*x_h) / (semi_x_axis*semi_x_axis) + (y_k*y_k) / (semi_y_axis*semi_y_axis) <= 1)
+        double center_y = (top_left.y() + bot_right.y())/2;
+        double center_x = (log10(top_left.x()) + log10(bot_right.x()))/2;
+        double semi_x_axis = qAbs(log10(top_left.x())-log10(bot_right.x()))/2.0;
+        double semi_y_axis = qAbs(top_left.y()-bot_right.y())/2.0;
+        double x_h;
+        double y_k;
+
+        for (auto i : data.keys())
         {
-            addSelectionPoint(i);
-        }
-    };
+            x_h = log10(data[i][0]) - center_x;
+            y_k = data[i][1]-center_y;
+            if ((x_h*x_h) / (semi_x_axis*semi_x_axis) + (y_k*y_k) / (semi_y_axis*semi_y_axis) <= 1)
+            {
+                addSelectionPoint(i);
+            }
+        };
+    }
+    else if ((xscale == "lin") & (yscale == "log"))
+    {
+        double center_y = (log10(top_left.y()) + log10(bot_right.y()))/2;
+        double center_x = (top_left.x() + bot_right.x())/2;
+        double semi_x_axis = qAbs(top_left.x()-bot_right.x())/2.0;
+        double semi_y_axis = qAbs(log10(top_left.y())-log10(bot_right.y()))/2.0;
+        double x_h;
+        double y_k;
+
+        for (auto i : data.keys())
+        {
+            x_h = data[i][0] - center_x;
+            y_k = log10(data[i][1]) - center_y;
+            if ((x_h*x_h) / (semi_x_axis*semi_x_axis) + (y_k*y_k) / (semi_y_axis*semi_y_axis) <= 1)
+            {
+                addSelectionPoint(i);
+            }
+        };
+    }
+    else if ((xscale == "lin") & (yscale == "lin"))
+    {
+        double center_y = (top_left.y() + bot_right.y())/2;
+        double center_x = (top_left.x() + bot_right.x())/2;
+        double semi_x_axis = qAbs(top_left.x()-bot_right.x())/2.0;
+        double semi_y_axis = qAbs(top_left.y()-bot_right.y())/2.0;
+        double x_h;
+        double y_k;
+
+        for (auto i : data.keys())
+        {
+            x_h = data[i][0] - center_x;
+            y_k = data[i][1] - center_y;
+            if ((x_h*x_h) / (semi_x_axis*semi_x_axis) + (y_k*y_k) / (semi_y_axis*semi_y_axis) <= 1)
+            {
+                addSelectionPoint(i);
+            }
+        };
+    }
+    else if ((xscale == "log") & (yscale == "log"))
+    {
+        double center_y = (log10(top_left.y()) + log10(bot_right.y()))/2;
+        double center_x = (log10(top_left.x()) + log10(bot_right.x()))/2;
+        double semi_x_axis = qAbs(log10(top_left.x())-log10(bot_right.x()))/2.0;
+        double semi_y_axis = qAbs(log10(top_left.y())-log10(bot_right.y()))/2.0;
+        double x_h;
+        double y_k;
+
+        for (auto i : data.keys())
+        {
+            x_h = log10(data[i][0]) - center_x;
+            y_k = log10(data[i][1]) - center_y;
+            if ((x_h*x_h) / (semi_x_axis*semi_x_axis) + (y_k*y_k) / (semi_y_axis*semi_y_axis) <= 1)
+            {
+                addSelectionPoint(i);
+            }
+        };
+    }
 }
 
 void CustomPointSelection::pointsInPoly(QMap<int, QVector<double>> data)
