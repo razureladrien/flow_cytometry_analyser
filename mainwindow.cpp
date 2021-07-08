@@ -677,7 +677,7 @@ void MainWindow::selection(QList<int> keys)
     {
         QMap<int, QVector<double>> plot_data = removeNonUnique(plot_windows[p]->getData(),keys);
         plot_windows[p]->plot(QCPScatterStyle(QCPScatterStyle::ssDisc, Qt::black, 1),0,plot_data);
-        plot_windows[p]->plot_values(QCPScatterStyle(QCPScatterStyle::ssDisc, Qt::red, 2),1,keys);
+        plot_windows[p]->plot_values(QCPScatterStyle(QCPScatterStyle::ssDisc, Qt::red, 1),1,keys);
         plot_windows[p]->getSelection()->setKeys(keys);
     }
 }

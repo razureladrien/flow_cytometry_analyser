@@ -379,7 +379,7 @@ void PlotWindow::startEndLine(QMouseEvent *event)
         the first point so it makes the selection feature easier to close */
 
         line = new QCPItemLine(getPlot());
-        line->setPen(QPen(QBrush(Qt::red), 1, Qt::DashLine));
+        line->setPen(QPen(QBrush(Qt::red), 1.5, Qt::DashLine));
         line->start->setCoords(x_pos, y_pos);
         line->end->setCoords(x_pos, y_pos);
         line->setLayer("selectionLayer");
@@ -396,20 +396,19 @@ void PlotWindow::startEndLine(QMouseEvent *event)
         }
         else if ((xscale == "log") & (yscale == "log"))
         {
-            radius_x = qAbs(log10(getPlot()->xAxis->range().upper - getPlot()->xAxis->range().lower)/plot_widget->size().width()*20*x_pos); //pour le log (c'est scandaleux)
-            radius_y = qAbs(log10(getPlot()->yAxis->range().upper - getPlot()->yAxis->range().lower)/plot_widget->size().height()*20*y_pos);
+            radius_x = qAbs((log10(getPlot()->xAxis->range().upper) - log10(getPlot()->xAxis->range().lower))/plot_widget->size().width()*10*x_pos);
+            radius_y = qAbs((log10(getPlot()->yAxis->range().upper) - log10(getPlot()->yAxis->range().lower))/plot_widget->size().height()*10*y_pos);
         }
         else if ((xscale == "lin") & (yscale == "log"))
         {
             radius_x = qAbs((getPlot()->xAxis->range().upper - getPlot()->xAxis->range().lower)/plot_widget->size().width()*5);
-            radius_y = qAbs(log10(getPlot()->yAxis->range().upper - getPlot()->yAxis->range().lower)/plot_widget->size().height()*20*y_pos);
+            radius_y = qAbs((log10(getPlot()->yAxis->range().upper) - log10(getPlot()->yAxis->range().lower))/plot_widget->size().height()*10*y_pos);
         }
         else if ((xscale == "log") & (yscale == "lin"))
         {
-            radius_x = qAbs(log10(getPlot()->xAxis->range().upper - getPlot()->xAxis->range().lower)/plot_widget->size().width()*20*x_pos);
+            radius_x = qAbs((log10(getPlot()->xAxis->range().upper) - log10(getPlot()->xAxis->range().lower))/plot_widget->size().width()*10*x_pos);
             radius_y = qAbs((getPlot()->yAxis->range().upper - getPlot()->yAxis->range().lower)/plot_widget->size().height()*5);
         }
-        qDebug() << radius_x;
         double a = x_pos-radius_x;
         double b = y_pos+radius_y;
         double c = x_pos+radius_x;
@@ -447,7 +446,7 @@ void PlotWindow::startEndLine(QMouseEvent *event)
     /* selection continuing */
     } else if (free_form_select && lActive){
         line = new QCPItemLine(getPlot());
-        line->setPen(QPen(QBrush(Qt::red), 1, Qt::DashLine));
+        line->setPen(QPen(QBrush(Qt::red), 1.5, Qt::DashLine));
         line->start->setCoords(x_pos, y_pos);
         line->end->setCoords(x_pos, y_pos);
         line->setLayer("selectionLayer");
@@ -493,7 +492,7 @@ void PlotWindow::on_cbox_x_activated()
 
     QMap<int, QVector<double>> plot_data = removeNonUnique(getData(),selectionObj->getSelectionPoints());
     plot(style, 0, plot_data);
-    plot_values(QCPScatterStyle(QCPScatterStyle::ssDisc, Qt::red, 2),1,selectionObj->getSelectionPoints());
+    plot_values(QCPScatterStyle(QCPScatterStyle::ssDisc, Qt::red, 1),1,selectionObj->getSelectionPoints());
     getPlot()->graph(0)->rescaleAxes(true);
     getPlot()->replot();
 }
@@ -509,7 +508,7 @@ void PlotWindow::on_cbox_y_activated()
 
     QMap<int, QVector<double>> plot_data = removeNonUnique(getData(),selectionObj->getSelectionPoints());
     plot(style, 0, plot_data);
-    plot_values(QCPScatterStyle(QCPScatterStyle::ssDisc, Qt::red, 2),1,selectionObj->getSelectionPoints());
+    plot_values(QCPScatterStyle(QCPScatterStyle::ssDisc, Qt::red, 1),1,selectionObj->getSelectionPoints());
     getPlot()->graph(0)->rescaleAxes(true);
     getPlot()->replot();
 }
