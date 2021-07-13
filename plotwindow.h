@@ -50,6 +50,15 @@ public slots:
 
     void axisScaleX(int s);
     void axisScaleY(int s);
+
+    void mouseOverAxis(QMouseEvent *event);
+    void xAxisSelect(QCPAxis::SelectableParts);
+    void yAxisSelect(QCPAxis::SelectableParts);
+
+    void startAxisDragging(QMouseEvent*);
+    void moveAxisDragging(QMouseEvent*);
+    void endAxisDragging(QMouseEvent*);
+
 signals:
     void deleted();
     void ellipse_selection_closed(QList<int> selection);
@@ -78,6 +87,8 @@ private:
 
     bool eActive=false;
     bool lActive=false;
+    bool xdActive=false;
+    bool ydActive=false;
     bool started_line=false;
 
     QCPItemEllipse *ellipse = nullptr;
@@ -87,11 +98,15 @@ private:
     QList<QCPItemLine *> polygon = {};
     double radius_x, radius_y;
     double start_v_x, start_v_y;
+    double start_drag_x, start_drag_y;
 
     bool ellipse_select=false;
     bool free_form_select=false;
     bool rescale_flag=true;
     bool resolution_flag=true; // true = high res, false = low res
+    bool xAxis_selected=false;
+    bool yAxis_selected=false;
+    QCursor current_cursor;
 
 };
 

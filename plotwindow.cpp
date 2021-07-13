@@ -98,6 +98,15 @@ PlotWindow::PlotWindow(QWidget *parent, QList<QString> params, QVector<QVector<f
 
     connect(btn_logx, SIGNAL(stateChanged(int)), SLOT(axisScaleX(int)));
     connect(btn_logy, SIGNAL(stateChanged(int)), SLOT(axisScaleY(int)));
+
+    connect(getPlot(), SIGNAL(mouseMove(QMouseEvent*)), SLOT(mouseOverAxis(QMouseEvent*)));
+
+    connect(getPlot()->xAxis, SIGNAL(selectionChanged(QCPAxis::SelectableParts)), SLOT(xAxisSelect(QCPAxis::SelectableParts)));
+    connect(getPlot()->yAxis, SIGNAL(selectionChanged(QCPAxis::SelectableParts)), SLOT(yAxisSelect(QCPAxis::SelectableParts)));
+
+    connect(getPlot(), SIGNAL(mousePress(QMouseEvent*)), SLOT(startAxisDragging(QMouseEvent*)));
+    connect(getPlot(), SIGNAL(mouseMove(QMouseEvent*)), SLOT(moveAxisDragging(QMouseEvent*)));
+    connect(getPlot(), SIGNAL(mouseRelease(QMouseEvent*)), SLOT(endAxisDragging(QMouseEvent*)));
 }
 
 PlotWindow::~PlotWindow()
@@ -216,10 +225,20 @@ void PlotWindow::setData(QVector<QVector<float>> d)
 
 void PlotWindow::on_btn_zoom_clicked()
 {
-    getPlot()->setCursor(Qt::CrossCursor);
+    /* disable range dragging */
+    if (xAxis_selected)
+        getPlot()->xAxis->setSelectedParts(QCPAxis::spNone);
+    if (yAxis_selected)
+        getPlot()->yAxis->setSelectedParts(QCPAxis::spNone);
+
+    /* change cursor */
+    current_cursor = Qt::CrossCursor;
+    getPlot()->setCursor(current_cursor);
+
     /* disable ellipse and free form selection */
     ellipse_select = false;
     free_form_select = false;
+    lActive = false;
     while(!polygon.isEmpty())
         getPlot()->removeItem(polygon.takeFirst());
 
@@ -236,19 +255,28 @@ void PlotWindow::on_btn_zoom_clicked()
     getPlot()->setInteraction(QCP::iRangeDrag, false);
     getPlot()->setInteraction(QCP::iRangeZoom);
     getPlot()->setSelectionRectMode(QCP::srmZoom);
+    getPlot()->replot();
 }
 
 void PlotWindow::on_btn_navigate_clicked()
 {
-    getPlot()->setCursor(Qt::SizeAllCursor);
+    /* disable range dragging */
+    if (xAxis_selected)
+        getPlot()->xAxis->setSelectedParts(QCPAxis::spNone);
+    if (yAxis_selected)
+        getPlot()->yAxis->setSelectedParts(QCPAxis::spNone);
+
+    /* change cursor */
+    current_cursor = Qt::SizeAllCursor;
+    getPlot()->setCursor(current_cursor);
+
     /* disable ellipse and free form selection */
     ellipse_select = false;
     free_form_select = false;
+    lActive = false;
     while(!polygon.isEmpty())
         getPlot()->removeItem(polygon.takeFirst());
     selectionObj->clearSelectionPoints();
-    //plot(QCPScatterStyle(QCPScatterStyle::ssDisc, Qt::black, 1), 0, data_dic);
-    //plot(QCPScatterStyle(QCPScatterStyle::ssDisc, Qt::black, 1), 1, selectionObj->getSelectionPoints()[0],selectionObj->getSelectionPoints()[1]);
 
     if (ellipse != nullptr)
     {
@@ -260,11 +288,21 @@ void PlotWindow::on_btn_navigate_clicked()
     getPlot()->setNoAntialiasingOnDrag(true);
     getPlot()->setInteraction(QCP::iRangeZoom);
     getPlot()->setSelectionRectMode(QCP::srmNone);
+    getPlot()->replot();
 }
 
 void PlotWindow::on_btn_ellipse_clicked()
 {
-    getPlot()->setCursor(Qt::ArrowCursor);
+    /* disable range dragging */
+    if (xAxis_selected)
+        getPlot()->xAxis->setSelectedParts(QCPAxis::spNone);
+    if (yAxis_selected)
+        getPlot()->yAxis->setSelectedParts(QCPAxis::spNone);
+
+    /* change cursor */
+    current_cursor = Qt::ArrowCursor;
+    getPlot()->setCursor(current_cursor);
+
     /* reset ellipse when clicking on button and disable free form selection*/
     if (ellipse != nullptr)
     {
@@ -279,6 +317,7 @@ void PlotWindow::on_btn_ellipse_clicked()
 
     ellipse_select = true;
     free_form_select = false;
+    lActive = false;
     while(!polygon.isEmpty())
         getPlot()->removeItem(polygon.takeFirst());
 
@@ -293,9 +332,11 @@ void PlotWindow::on_btn_ellipse_clicked()
 
 void PlotWindow::on_btn_free_form_clicked()
 {
-    getPlot()->setCursor(Qt::ArrowCursor);
+    current_cursor = Qt::ArrowCursor;
+    getPlot()->setCursor(current_cursor);
     free_form_select = true;
     ellipse_select = false;
+    lActive = false;
 
     if (ellipse != nullptr)
     {
@@ -309,11 +350,11 @@ void PlotWindow::on_btn_free_form_clicked()
     selectionObj->clearSelectionPoints();
     getPlot()->graph(1)->data()->clear();
     plot(QCPScatterStyle(QCPScatterStyle::ssDisc, Qt::black, 1), 0, data_dic);
-    //plot(QCPScatterStyle(QCPScatterStyle::ssDisc, Qt::black, 1), 1, selectionObj->getSelectionPoints()[0],selectionObj->getSelectionPoints()[1]);
 
     getPlot()->setInteraction(QCP::iRangeDrag, false);
     getPlot()->setInteraction(QCP::iRangeZoom, false);
     getPlot()->setSelectionRectMode(QCP::srmNone);
+    getPlot()->replot();
 }
 
 void PlotWindow::startEllipseSelection(QMouseEvent *event)
@@ -424,7 +465,8 @@ void PlotWindow::startEndLine(QMouseEvent *event)
         started_line = true;
 
     /* selection ended */
-    } else if ( ( ((x_pos-start_v_x)*(x_pos-start_v_x) / (radius_x*radius_x) + (y_pos-start_v_y)*(y_pos-start_v_y) / (radius_y*radius_y)) <= 1) && free_form_select && lActive) {
+    } else if ( ( ((x_pos-start_v_x)*(x_pos-start_v_x) / (radius_x*radius_x) + (y_pos-start_v_y)*(y_pos-start_v_y) / (radius_y*radius_y)) <= 1) && free_form_select && lActive)
+    {
         line->end->setCoords(start_v_x, start_v_y);
         selectionObj->addVertex(start_v_x, start_v_y);
         lActive = false;
@@ -572,4 +614,123 @@ void PlotWindow::axisScaleY(int s)
         yscale = "lin";
         getPlot()->replot();
     }
+}
+
+void PlotWindow::mouseOverAxis(QMouseEvent *event)
+{
+    double x_range = (getPlot()->xAxis->range().upper - getPlot()->xAxis->range().lower)/100;
+    double y_range = (getPlot()->yAxis->range().upper - getPlot()->yAxis->range().lower)/100;
+    if ((xscale == "lin") & (yscale == "log"))
+    {
+        y_range = (log10(getPlot()->yAxis->range().upper) - log10(getPlot()->yAxis->range().lower))*getPlot()->yAxis->range().lower/100;
+    }
+    else if ((xscale == "log") & (yscale == "lin"))
+    {
+        x_range = (log10(getPlot()->xAxis->range().upper) - log10(getPlot()->xAxis->range().lower))*getPlot()->xAxis->range().lower/100;
+    }
+    else if ((xscale == "log") & (yscale == "log"))
+    {
+        x_range = (log10(getPlot()->xAxis->range().upper) - log10(getPlot()->xAxis->range().lower))*getPlot()->xAxis->range().lower/100;
+        y_range = (log10(getPlot()->yAxis->range().upper) - log10(getPlot()->yAxis->range().lower))*getPlot()->yAxis->range().lower/100;
+    }
+
+    //qDebug()<<x_range << y_range;
+
+    double x = getPlot()->xAxis->pixelToCoord(event->pos().x());
+    double y = getPlot()->yAxis->pixelToCoord(event->pos().y());
+    if ((y < getPlot()->yAxis->range().lower+y_range)
+            & (y > getPlot()->yAxis->range().lower-y_range) & !xAxis_selected)
+    {
+        getPlot()->setCursor(Qt::PointingHandCursor);
+    } else if ((x < getPlot()->xAxis->range().lower+x_range)
+               & (x > getPlot()->xAxis->range().lower-x_range) & !yAxis_selected)
+    {
+        getPlot()->setCursor(Qt::PointingHandCursor);
+    } else if (!yAxis_selected & !xAxis_selected){
+        getPlot()->setCursor(current_cursor);
+    }
+}
+
+void PlotWindow::xAxisSelect(QCPAxis::SelectableParts)
+{
+    xAxis_selected = !xAxis_selected;
+    if (xAxis_selected){
+        getPlot()->setCursor(Qt::SplitHCursor);
+
+        /* disable ellipse and free form selection */
+        ellipse_select = false;
+        free_form_select = false;
+        while(!polygon.isEmpty())
+            getPlot()->removeItem(polygon.takeFirst());
+
+        getPlot()->setInteraction(QCP::iRangeDrag, false);
+        getPlot()->setInteraction(QCP::iRangeZoom, false);
+        getPlot()->setSelectionRectMode(QCP::srmNone);
+    } else if (!xAxis_selected)
+    {
+        current_cursor = Qt::ArrowCursor;
+    }
+}
+
+void PlotWindow::yAxisSelect(QCPAxis::SelectableParts)
+{
+    yAxis_selected = !yAxis_selected;
+    if (yAxis_selected){
+
+        getPlot()->setCursor(Qt::SplitVCursor);
+
+        /* disable ellipse and free form selection */
+        ellipse_select = false;
+        free_form_select = false;
+        while(!polygon.isEmpty())
+            getPlot()->removeItem(polygon.takeFirst());
+
+        getPlot()->setInteraction(QCP::iRangeDrag, false);
+        getPlot()->setInteraction(QCP::iRangeZoom, false);
+        getPlot()->setSelectionRectMode(QCP::srmNone);
+    } else if (!yAxis_selected)
+    {
+        current_cursor = Qt::ArrowCursor;
+    }
+}
+
+void PlotWindow::startAxisDragging(QMouseEvent *event)
+{
+    if (xAxis_selected)
+    {
+        xdActive = true;
+        start_drag_x = getPlot()->xAxis->pixelToCoord(event->pos().x());
+    }
+    else if (yAxis_selected)
+    {
+        ydActive = true;
+        start_drag_y = getPlot()->yAxis->pixelToCoord(event->pos().y());
+    }
+}
+
+void PlotWindow::moveAxisDragging(QMouseEvent *event)
+{
+    if (xdActive)
+    {
+        double pos = getPlot()->xAxis->pixelToCoord(event->pos().x());
+        double diff = pos-start_drag_x;
+        double lower = getPlot()->xAxis->range().lower;
+        double upper = getPlot()->xAxis->range().upper;
+        getPlot()->xAxis->setRange(lower-diff/10, upper+diff/10);
+        getPlot()->replot();
+    } else if (ydActive)
+    {
+        double pos = getPlot()->yAxis->pixelToCoord(event->pos().y());
+        double diff = pos-start_drag_y;
+        double lower = getPlot()->yAxis->range().lower;
+        double upper = getPlot()->yAxis->range().upper;
+        getPlot()->yAxis->setRange(lower-diff/10, upper+diff/10);
+        getPlot()->replot();
+    }
+}
+
+void PlotWindow::endAxisDragging(QMouseEvent *)
+{
+    xdActive=false;
+    ydActive=false;
 }
