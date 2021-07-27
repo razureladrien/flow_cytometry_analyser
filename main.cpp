@@ -12,13 +12,6 @@ int main(int argc, char *argv[])
     style.setSize(1);
     style.setPen(QPen(Qt::black));
 
-//    for (int i=0; i<100; i++)
-//    {
-//        w.addPoint(rand() % 100, rand()% 100);
-//    }
-
-//    w.plot(style, 0, w.getX(), w.getY());
-
 
     w.show();
     return a.exec();

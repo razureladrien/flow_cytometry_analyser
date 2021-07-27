@@ -9,13 +9,14 @@ class PlotWindow : public QObject
 {
     Q_OBJECT
 public:
-    PlotWindow(QWidget *parent = nullptr, QList<QString> params = {}, QVector<QVector<float>> data = {});
+    PlotWindow(QWidget *parent = nullptr, QList<QString> params = {}, QVector<QVector<float>> data = {}, int id = 0, double size = 1);
     ~PlotWindow();
 
     QGroupBox* getWindow();
     QCustomPlot* getPlot();
     QMap<int, QVector<double>> getData() {return data_dic;};
     CustomPointSelection* getSelection() {return selectionObj;};
+    int getID() {return plot_id;};
 
     void addPoint(int key, double x, double y);
     void clearData();
@@ -24,6 +25,8 @@ public:
 
     void setParameters(QList<QString> p);
     void setData(QVector<QVector<float>> d);
+    void setID(int id){plot_id = id;};
+    void setScatterSize(double s){scatter_size = s;};
 
     void setDataFromParam(int x_param, int y_param);
 
@@ -35,6 +38,7 @@ public slots:
     void on_btn_navigate_clicked();
     void on_btn_ellipse_clicked();
     void on_btn_free_form_clicked();
+    void on_btn_reset_clicked();
 
     void startEllipseSelection(QMouseEvent *event);
     void moveEllipseSelection(QMouseEvent *event);
@@ -55,12 +59,10 @@ public slots:
     void xAxisSelect(QCPAxis::SelectableParts);
     void yAxisSelect(QCPAxis::SelectableParts);
 
-    void startAxisDragging(QMouseEvent*);
-    void moveAxisDragging(QMouseEvent*);
-    void endAxisDragging(QMouseEvent*);
+    void moveAxisDragging(QWheelEvent*);
 
 signals:
-    void deleted();
+    void deleted(int);
     void ellipse_selection_closed(QList<int> selection);
     void free_selection_closed(QList<int> selection);
 
@@ -71,10 +73,12 @@ private:
     QSize size;
 
     QCheckBox *btn_logx, *btn_logy;
-    QPushButton *btn_zoom, *btn_navigate, *btn_ellipse, *btn_free_form, *btn_resolution, *close_btn;
+    QList<QPushButton *> tool_buttons;
+    QPushButton *btn_zoom, *btn_navigate, *btn_ellipse, *btn_free_form, *btn_resolution, *close_btn, *btn_reset;
     QComboBox *cbox_x, *cbox_y;
 
     QVector<double> qv_x_to_plot, qv_y_to_plot;
+    int plot_id;
 
     QString xscale = "lin";
     QString yscale = "lin";
@@ -96,9 +100,11 @@ private:
     QCPItemLine *line = nullptr;
     QCPItemEllipse *poly_closed = nullptr;
     QList<QCPItemLine *> polygon = {};
+    double scatter_size;
     double radius_x, radius_y;
     double start_v_x, start_v_y;
     double start_drag_x, start_drag_y;
+    double xdActive_tmp, ydActive_tmp;
 
     bool ellipse_select=false;
     bool free_form_select=false;

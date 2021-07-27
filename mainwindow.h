@@ -30,6 +30,8 @@ public:
     void parseFileText(QString fileName);
     void parseFileData(QString fileName);
 
+    void queuePlot(PlotWindow *p, QList<int> keys);
+
     QMap<int, QVector<double> > removeNonUnique(QMap<int, QVector<double> > map1, QList<int> keys);
 protected:
 
@@ -59,7 +61,7 @@ private slots:
 
     void on_actionAdd_plot_triggered();
 
-    void plot_deleted();
+    void plot_deleted(int id);
 
     void selection(QList<int> keys);
 
@@ -70,7 +72,8 @@ private:
     QVector<double> qv_x_to_plot, qv_y_to_plot;
 
     qint32 number_of_plots = 0;
-    QList<PlotWindow *> plot_windows = {};
+    QList<int> plot_queue = {5,4,3,2,1,0};
+    QMap<int, PlotWindow *> plot_windows = {};
 
     QString xscale = "lin";
     QString yscale = "lin";
@@ -92,6 +95,7 @@ private:
     QCPItemLine *line = nullptr;
     QCPItemEllipse *poly_closed = nullptr;
     QList<QCPItemLine *> polygon = {};
+    double global_scatter_size = 2;
     double radius_x, radius_y;
     double start_v_x, start_v_y;
 

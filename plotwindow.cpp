@@ -1,12 +1,13 @@
 #include "plotwindow.h"
 
-PlotWindow::PlotWindow(QWidget *parent, QList<QString> params, QVector<QVector<float>> data)
+PlotWindow::PlotWindow(QWidget *parent, QList<QString> params, QVector<QVector<float>> data, int id, double size)
 {
-    // enregistre toutes les information relatives au plot et
-    // dans le mainwindow on va avoir la liste des plots qui sera saved
-
     setParameters(params);
     setData(data);
+    setID(id);
+    setScatterSize(size);
+
+    /*** Plot UI setup ***/
     plot_box = new QGroupBox(parent);
     QVBoxLayout *layout = new QVBoxLayout(plot_box);
 
@@ -19,6 +20,15 @@ PlotWindow::PlotWindow(QWidget *parent, QList<QString> params, QVector<QVector<f
     plot_widget->addLayer("selectionLayer", 0, QCustomPlot::limAbove);
     plot_widget->layer("selectionLayer")->setMode(QCPLayer::lmBuffered);
     plot_widget->setNoAntialiasingOnDrag(true);
+    plot_widget->xAxis->setBasePen(QPen(Qt::gray));
+    plot_widget->xAxis->setLabelColor(Qt::gray);
+    plot_widget->xAxis->setTickPen(QPen(Qt::gray));
+    plot_widget->xAxis->setSubTickPen(QPen(Qt::gray));
+    plot_widget->yAxis->setBasePen(QPen(Qt::gray));
+    plot_widget->yAxis->setLabelColor(Qt::gray);
+    plot_widget->yAxis->setTickPen(QPen(Qt::gray));
+    plot_widget->yAxis->setSubTickPen(QPen(Qt::gray));
+
 
     selectionObj = new CustomPointSelection();
     poly_closed = new QCPItemEllipse(getPlot());
@@ -29,9 +39,18 @@ PlotWindow::PlotWindow(QWidget *parent, QList<QString> params, QVector<QVector<f
     QGridLayout *button_layout = new QGridLayout;
 
     btn_zoom = new QPushButton("Zoom",button_box);
+    tool_buttons.append(btn_zoom);
+    btn_zoom->setCheckable(true);
     btn_navigate = new QPushButton("Navigate",button_box);
+    tool_buttons.append(btn_navigate);
+    btn_navigate->setCheckable(true);
     btn_ellipse = new QPushButton("Ellipse",button_box);
+    tool_buttons.append(btn_ellipse);
+    btn_ellipse->setCheckable(true);
     btn_free_form = new QPushButton("Free form",button_box);
+    tool_buttons.append(btn_free_form);
+    btn_free_form->setCheckable(true);
+    btn_reset = new QPushButton("Reset", button_box);
     btn_logx = new QCheckBox("x log scale", button_box);
     btn_logy = new QCheckBox("y log scale", button_box);
 
@@ -52,7 +71,7 @@ PlotWindow::PlotWindow(QWidget *parent, QList<QString> params, QVector<QVector<f
 
     QCPScatterStyle style;
     style.setShape(QCPScatterStyle::ssDisc);
-    style.setSize(1);
+    style.setSize(scatter_size);
     style.setPen(QPen(Qt::black));
 
     plot(style, 0, data_dic);
@@ -61,10 +80,11 @@ PlotWindow::PlotWindow(QWidget *parent, QList<QString> params, QVector<QVector<f
     button_layout->addWidget(btn_navigate,0,1,2,1);
     button_layout->addWidget(btn_ellipse,0,2,2,1);
     button_layout->addWidget(btn_free_form,0,3,2,1);
-    button_layout->addWidget(cbox_x,0,4,2,1);
-    button_layout->addWidget(cbox_y,0,5,2,1);
-    button_layout->addWidget(btn_logx,0,6);
-    button_layout->addWidget(btn_logy,1,6);
+    button_layout->addWidget(btn_reset, 0,4,2,1);
+    button_layout->addWidget(cbox_x,0,5,2,1);
+    button_layout->addWidget(cbox_y,0,6,2,1);
+    button_layout->addWidget(btn_logx,0,7);
+    button_layout->addWidget(btn_logy,1,7);
     button_layout->setSizeConstraint(QLayout::SetMaximumSize);
 
     button_box->setLayout(button_layout);
@@ -80,11 +100,13 @@ PlotWindow::PlotWindow(QWidget *parent, QList<QString> params, QVector<QVector<f
     close_btn->setMask(region);
     close_btn->raise();
 
+    /*** buttons connections ***/
     connect(close_btn, SIGNAL(released()), SLOT(close_window()));
     connect(btn_zoom, SIGNAL(clicked()), SLOT(on_btn_zoom_clicked()));
     connect(btn_navigate, SIGNAL(clicked()), SLOT(on_btn_navigate_clicked()));
     connect(btn_ellipse, SIGNAL(clicked()), SLOT(on_btn_ellipse_clicked()));
     connect(btn_free_form, SIGNAL(clicked()), SLOT(on_btn_free_form_clicked()));
+    connect(btn_reset, SIGNAL(clicked()), SLOT(on_btn_reset_clicked()));
 
     connect(cbox_x, SIGNAL(activated(int)), SLOT(on_cbox_x_activated()));
     connect(cbox_y, SIGNAL(activated(int)), SLOT(on_cbox_y_activated()));
@@ -104,9 +126,7 @@ PlotWindow::PlotWindow(QWidget *parent, QList<QString> params, QVector<QVector<f
     connect(getPlot()->xAxis, SIGNAL(selectionChanged(QCPAxis::SelectableParts)), SLOT(xAxisSelect(QCPAxis::SelectableParts)));
     connect(getPlot()->yAxis, SIGNAL(selectionChanged(QCPAxis::SelectableParts)), SLOT(yAxisSelect(QCPAxis::SelectableParts)));
 
-    connect(getPlot(), SIGNAL(mousePress(QMouseEvent*)), SLOT(startAxisDragging(QMouseEvent*)));
-    connect(getPlot(), SIGNAL(mouseMove(QMouseEvent*)), SLOT(moveAxisDragging(QMouseEvent*)));
-    connect(getPlot(), SIGNAL(mouseRelease(QMouseEvent*)), SLOT(endAxisDragging(QMouseEvent*)));
+    connect(getPlot(), SIGNAL(mouseWheel(QWheelEvent*)), SLOT(moveAxisDragging(QWheelEvent*)));
 }
 
 PlotWindow::~PlotWindow()
@@ -125,7 +145,7 @@ QCustomPlot* PlotWindow::getPlot()
 
 void PlotWindow::close_window()
 {
-    emit deleted();
+    emit deleted(getID());
     delete(plot_box);
     delete(this);
 }
@@ -225,6 +245,9 @@ void PlotWindow::setData(QVector<QVector<float>> d)
 
 void PlotWindow::on_btn_zoom_clicked()
 {
+    for (const auto& b : tool_buttons)
+        b->setChecked(false);
+
     /* disable range dragging */
     if (xAxis_selected)
         getPlot()->xAxis->setSelectedParts(QCPAxis::spNone);
@@ -247,8 +270,6 @@ void PlotWindow::on_btn_zoom_clicked()
         ellipse->topLeft->setCoords(0,0);
         ellipse->bottomRight->setCoords(0,0);
         selectionObj->clearSelectionPoints();
-        //plot(QCPScatterStyle(QCPScatterStyle::ssDisc, Qt::black, 1), 0, data_dic);
-        //plot(QCPScatterStyle(QCPScatterStyle::ssDisc, Qt::black, 1), 1, selectionObj->getSelectionPoints()[0],selectionObj->getSelectionPoints()[1]);
     }
 
     /* set zoom interaction */
@@ -256,10 +277,14 @@ void PlotWindow::on_btn_zoom_clicked()
     getPlot()->setInteraction(QCP::iRangeZoom);
     getPlot()->setSelectionRectMode(QCP::srmZoom);
     getPlot()->replot();
+    btn_zoom->setChecked(true);
 }
 
 void PlotWindow::on_btn_navigate_clicked()
 {
+    for (const auto& b : tool_buttons)
+        b->setChecked(false);
+
     /* disable range dragging */
     if (xAxis_selected)
         getPlot()->xAxis->setSelectedParts(QCPAxis::spNone);
@@ -289,10 +314,14 @@ void PlotWindow::on_btn_navigate_clicked()
     getPlot()->setInteraction(QCP::iRangeZoom);
     getPlot()->setSelectionRectMode(QCP::srmNone);
     getPlot()->replot();
+    btn_navigate->setChecked(true);
 }
 
 void PlotWindow::on_btn_ellipse_clicked()
 {
+    for (const auto& b : tool_buttons)
+        b->setChecked(false);
+
     /* disable range dragging */
     if (xAxis_selected)
         getPlot()->xAxis->setSelectedParts(QCPAxis::spNone);
@@ -313,6 +342,8 @@ void PlotWindow::on_btn_ellipse_clicked()
     } else {
         ellipse = new QCPItemEllipse(getPlot());
         ellipse->setLayer("selectionLayer");
+        ellipse->topLeft->setCoords(0,0);
+        ellipse->bottomRight->setCoords(0,0);
     }
 
     ellipse_select = true;
@@ -323,15 +354,19 @@ void PlotWindow::on_btn_ellipse_clicked()
 
     selectionObj->clearSelectionPoints();
     getPlot()->graph(1)->data()->clear();
-    ellipse->setPen(QPen(QBrush(Qt::red), 0, Qt::DashLine));
+    ellipse->setPen(QPen(QBrush(Qt::red), 1.5, Qt::DashLine));
     getPlot()->setInteraction(QCP::iRangeDrag, false);
     getPlot()->setInteraction(QCP::iRangeZoom, false);
     getPlot()->setSelectionRectMode(QCP::srmNone);
-    plot(QCPScatterStyle(QCPScatterStyle::ssDisc, Qt::black, 1), 0, data_dic);
+    plot(QCPScatterStyle(QCPScatterStyle::ssDisc, Qt::black, scatter_size), 0, data_dic);
+    btn_ellipse->setChecked(true);
 }
 
 void PlotWindow::on_btn_free_form_clicked()
 {
+    for (const auto& b : tool_buttons)
+        b->setChecked(false);
+
     current_cursor = Qt::ArrowCursor;
     getPlot()->setCursor(current_cursor);
     free_form_select = true;
@@ -349,11 +384,20 @@ void PlotWindow::on_btn_free_form_clicked()
 
     selectionObj->clearSelectionPoints();
     getPlot()->graph(1)->data()->clear();
-    plot(QCPScatterStyle(QCPScatterStyle::ssDisc, Qt::black, 1), 0, data_dic);
+    plot(QCPScatterStyle(QCPScatterStyle::ssDisc, Qt::black, scatter_size), 0, data_dic);
 
     getPlot()->setInteraction(QCP::iRangeDrag, false);
     getPlot()->setInteraction(QCP::iRangeZoom, false);
     getPlot()->setSelectionRectMode(QCP::srmNone);
+    getPlot()->replot();
+    btn_free_form->setChecked(true);
+}
+
+void PlotWindow::on_btn_reset_clicked()
+{
+    getPlot()->xAxis->setRange(0,1);
+    getPlot()->yAxis->setRange(0,1);
+    getPlot()->graph(0)->rescaleAxes(true);
     getPlot()->replot();
 }
 
@@ -529,7 +573,7 @@ void PlotWindow::on_cbox_x_activated()
     setDataFromParam(cbox_x->currentIndex(),cbox_y->currentIndex());
     QCPScatterStyle style;
     style.setShape(QCPScatterStyle::ssDisc);
-    style.setSize(1);
+    style.setSize(scatter_size);
     style.setPen(QPen(Qt::black));
 
     QMap<int, QVector<double>> plot_data = removeNonUnique(getData(),selectionObj->getSelectionPoints());
@@ -545,7 +589,7 @@ void PlotWindow::on_cbox_y_activated()
     setDataFromParam(cbox_x->currentIndex(),cbox_y->currentIndex());
     QCPScatterStyle style;
     style.setShape(QCPScatterStyle::ssDisc);
-    style.setSize(1);
+    style.setSize(scatter_size);
     style.setPen(QPen(Qt::black));
 
     QMap<int, QVector<double>> plot_data = removeNonUnique(getData(),selectionObj->getSelectionPoints());
@@ -646,16 +690,20 @@ void PlotWindow::mouseOverAxis(QMouseEvent *event)
                & (x > getPlot()->xAxis->range().lower-x_range) & !yAxis_selected)
     {
         getPlot()->setCursor(Qt::PointingHandCursor);
-    } else if (!yAxis_selected & !xAxis_selected){
+    } else {
         getPlot()->setCursor(current_cursor);
     }
 }
 
 void PlotWindow::xAxisSelect(QCPAxis::SelectableParts)
 {
+    for (const auto& b : tool_buttons)
+        b->setChecked(false);
     xAxis_selected = !xAxis_selected;
     if (xAxis_selected){
-        getPlot()->setCursor(Qt::SplitHCursor);
+
+        current_cursor = Qt::SplitHCursor;
+        getPlot()->setCursor(current_cursor);
 
         /* disable ellipse and free form selection */
         ellipse_select = false;
@@ -674,10 +722,13 @@ void PlotWindow::xAxisSelect(QCPAxis::SelectableParts)
 
 void PlotWindow::yAxisSelect(QCPAxis::SelectableParts)
 {
+    for (const auto& b : tool_buttons)
+        b->setChecked(false);
     yAxis_selected = !yAxis_selected;
     if (yAxis_selected){
 
-        getPlot()->setCursor(Qt::SplitVCursor);
+        current_cursor = Qt::SplitVCursor;
+        getPlot()->setCursor(current_cursor);
 
         /* disable ellipse and free form selection */
         ellipse_select = false;
@@ -694,43 +745,42 @@ void PlotWindow::yAxisSelect(QCPAxis::SelectableParts)
     }
 }
 
-void PlotWindow::startAxisDragging(QMouseEvent *event)
+void PlotWindow::moveAxisDragging(QWheelEvent *event)
 {
     if (xAxis_selected)
     {
-        xdActive = true;
-        start_drag_x = getPlot()->xAxis->pixelToCoord(event->pos().x());
-    }
-    else if (yAxis_selected)
-    {
-        ydActive = true;
-        start_drag_y = getPlot()->yAxis->pixelToCoord(event->pos().y());
-    }
-}
 
-void PlotWindow::moveAxisDragging(QMouseEvent *event)
-{
-    if (xdActive)
+        if (xscale == "lin")
+        {
+            int pttt = event->angleDelta().y();
+            double lower = getPlot()->xAxis->range().lower;
+            double upper = getPlot()->xAxis->range().upper;
+            getPlot()->xAxis->setRange(lower-pttt*(upper-lower)/1000, upper+pttt*(upper-lower)/1000);
+            getPlot()->replot();
+        } else if (xscale == "log")
+        {
+            int pttt = event->angleDelta().y();
+            double lower = getPlot()->xAxis->range().lower;
+            double upper = getPlot()->xAxis->range().upper;
+            getPlot()->xAxis->setRange(lower-pttt*(log10(upper)-log10(lower))/100, upper+pttt*(log10(upper)-log10(lower))/100);
+            getPlot()->replot();
+        }
+    } else if (yAxis_selected)
     {
-        double pos = getPlot()->xAxis->pixelToCoord(event->pos().x());
-        double diff = pos-start_drag_x;
-        double lower = getPlot()->xAxis->range().lower;
-        double upper = getPlot()->xAxis->range().upper;
-        getPlot()->xAxis->setRange(lower-diff/10, upper+diff/10);
-        getPlot()->replot();
-    } else if (ydActive)
-    {
-        double pos = getPlot()->yAxis->pixelToCoord(event->pos().y());
-        double diff = pos-start_drag_y;
-        double lower = getPlot()->yAxis->range().lower;
-        double upper = getPlot()->yAxis->range().upper;
-        getPlot()->yAxis->setRange(lower-diff/10, upper+diff/10);
-        getPlot()->replot();
+        if (yscale == "lin")
+        {
+            int pttt = event->angleDelta().y();
+            double lower = getPlot()->yAxis->range().lower;
+            double upper = getPlot()->yAxis->range().upper;
+            getPlot()->yAxis->setRange(lower-pttt*(upper-lower)/1000, upper+pttt*(upper-lower)/1000);
+            getPlot()->replot();
+        } else if (yscale == "log")
+        {
+            int pttt = event->angleDelta().y();
+            double lower = getPlot()->yAxis->range().lower;
+            double upper = getPlot()->yAxis->range().upper;
+            getPlot()->yAxis->setRange(lower-pttt*(log10(upper)-log10(lower))/100, upper+pttt*(log10(upper)-log10(lower))/100);
+            getPlot()->replot();
+        }
     }
-}
-
-void PlotWindow::endAxisDragging(QMouseEvent *)
-{
-    xdActive=false;
-    ydActive=false;
 }

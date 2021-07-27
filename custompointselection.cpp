@@ -21,10 +21,9 @@ QVector<QVector<double> > CustomPointSelection::getVerteces()
 void CustomPointSelection::addSelectionPoint(int key)
 {
     selection_keys.append(key);
-//    select_x.append(x);
-//    select_y.append(y);
 }
 
+/* add a vertex to the polygonal selection */
 void CustomPointSelection::addVertex(double x, double y)
 {
     verteces_x.append(x);
@@ -49,6 +48,7 @@ void CustomPointSelection::setKeys(QList<int> keys)
     selection_keys = keys;
 }
 
+/* return data points that are within the *ellipse */
 void CustomPointSelection::pointsInEllipse(QCPItemEllipse *ellipse, QMap<int, QVector<double>> data, QString xscale, QString yscale)
 {
     clearSelectionPoints();
@@ -133,6 +133,7 @@ void CustomPointSelection::pointsInEllipse(QCPItemEllipse *ellipse, QMap<int, QV
     }
 }
 
+/* return data points that are within the polygon verteces_x, verteces_y */
 void CustomPointSelection::pointsInPoly(QMap<int, QVector<double>> data, QString xscale, QString yscale)
 {
     // Copyright 2000 softSurfer, 2012 Dan Sunday
