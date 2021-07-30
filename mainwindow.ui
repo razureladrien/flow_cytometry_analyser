@@ -50,6 +50,9 @@
      <string>Tools</string>
     </property>
     <addaction name="actionAdd_plot"/>
+    <addaction name="actionSettings"/>
+    <addaction name="separator"/>
+    <addaction name="actionInformations"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuNew_plot"/>
@@ -78,6 +81,16 @@
   <action name="actionAdd_plot">
    <property name="text">
     <string>Add plot</string>
+   </property>
+  </action>
+  <action name="actionSettings">
+   <property name="text">
+    <string>Settings</string>
+   </property>
+  </action>
+  <action name="actionInformations">
+   <property name="text">
+    <string>Informations</string>
    </property>
   </action>
  </widget>

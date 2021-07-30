@@ -94,11 +94,12 @@ PlotWindow::PlotWindow(QWidget *parent, QList<QString> params, QVector<QVector<f
     plot_box->setLayout(layout);
 
     close_btn = new QPushButton("x",plot_box);
-    close_btn->setGeometry(0,0,22,22);
-    QRect rect(1,1,19,19);
+    close_btn->setGeometry(-2,-2,19,18);
+    QRect rect(-1,-1,20,20);
     QRegion region(rect, QRegion::Ellipse);
-    close_btn->setMask(region);
+    //close_btn->setMask(region);
     close_btn->raise();
+    close_btn->setStyleSheet("QPushButton{background-color:rgb(200,200,200); padding-bottom:0px; padding-left:2px; font-size:13px; border: none;} QPushButton:hover{ background-color:rgb(232,17,35); color:white; }");
 
     /*** buttons connections ***/
     connect(close_btn, SIGNAL(released()), SLOT(close_window()));
@@ -578,7 +579,7 @@ void PlotWindow::on_cbox_x_activated()
 
     QMap<int, QVector<double>> plot_data = removeNonUnique(getData(),selectionObj->getSelectionPoints());
     plot(style, 0, plot_data);
-    plot_values(QCPScatterStyle(QCPScatterStyle::ssDisc, Qt::red, 1),1,selectionObj->getSelectionPoints());
+    plot_values(QCPScatterStyle(QCPScatterStyle::ssDisc, Qt::red, scatter_size),1,selectionObj->getSelectionPoints());
     getPlot()->graph(0)->rescaleAxes(true);
     getPlot()->replot();
 }
@@ -594,7 +595,7 @@ void PlotWindow::on_cbox_y_activated()
 
     QMap<int, QVector<double>> plot_data = removeNonUnique(getData(),selectionObj->getSelectionPoints());
     plot(style, 0, plot_data);
-    plot_values(QCPScatterStyle(QCPScatterStyle::ssDisc, Qt::red, 1),1,selectionObj->getSelectionPoints());
+    plot_values(QCPScatterStyle(QCPScatterStyle::ssDisc, Qt::red, scatter_size),1,selectionObj->getSelectionPoints());
     getPlot()->graph(0)->rescaleAxes(true);
     getPlot()->replot();
 }

@@ -7,8 +7,8 @@ MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
 {
-
     ui->setupUi(this);
+    setWindowTitle("FlowCytoAnalyzer");
     on_actionAdd_plot_triggered();
 }
 
@@ -221,10 +221,10 @@ void MainWindow::on_actionOpen_triggered()
         plot_queue = {5,4,3,2,1,0};
 
         // parse file
-        QString fileName = file[0];
-        parseFileHeader(fileName);
-        parseFileText(fileName);
-        parseFileData(fileName);
+        file_name = file[0];
+        parseFileHeader(file_name);
+        parseFileText(file_name);
+        parseFileData(file_name);
 
         on_actionAdd_plot_triggered();
     }
@@ -240,7 +240,7 @@ void MainWindow::on_actionAdd_plot_triggered()
     } else if (number_of_plots < 6) {
         int id = plot_queue.last();
         plot_queue.pop_back();
-        PlotWindow *p = new PlotWindow(this, parameters, data, id, 2);
+        PlotWindow *p = new PlotWindow(this, parameters, data, id, global_scatter_size);
 
         if (id < 3)
             ui->gridLayout->addWidget(p->getWindow(),0,id);
@@ -298,4 +298,34 @@ QMap<int, QVector<double>> MainWindow::removeNonUnique(QMap<int, QVector<double>
             unique_map.remove(k);
     }
     return unique_map;
+}
+
+void MainWindow::on_actionSettings_triggered()
+{
+    settings_dialog = new Settings(this, global_scatter_size);
+    settings_dialog->show();
+    connect(settings_dialog, SIGNAL(marker_size(double)), SLOT(setMarkerSize(double)));
+}
+
+void MainWindow::setMarkerSize(double size)
+{
+    global_scatter_size = size;
+    if (!plot_windows.isEmpty())
+    {
+        QList<int> keys = plot_windows[0]->getSelection()->getSelectionPoints();
+        for (auto p : plot_windows.keys())
+        {
+            QMap<int, QVector<double>> plot_data = removeNonUnique(plot_windows[p]->getData(),keys);
+            plot_windows[p]->setScatterSize(size);
+            plot_windows[p]->plot(QCPScatterStyle(QCPScatterStyle::ssDisc, Qt::black, global_scatter_size),0, plot_data);
+            plot_windows[p]->plot_values(QCPScatterStyle(QCPScatterStyle::ssDisc, Qt::red, global_scatter_size),1,plot_windows[p]->getSelection()->getSelectionPoints());
+        }
+    }
+}
+
+void MainWindow::on_actionInformations_triggered()
+{
+    QString f = file_name.split("/").last();
+    information_dialog = new InformationDialog(this, f, number_of_events, number_of_params, parameters);
+    information_dialog->show();
 }

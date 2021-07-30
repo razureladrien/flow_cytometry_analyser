@@ -10,19 +10,25 @@ CONFIG += c++11
 
 SOURCES += \
     custompointselection.cpp \
+    information.cpp \
     main.cpp \
     mainwindow.cpp \
     plotwindow.cpp \
-    qcustomplot.cpp
+    qcustomplot.cpp \
+    settings.cpp
 
 HEADERS += \
     custompointselection.h \
+    information.h \
     mainwindow.h \
     plotwindow.h \
-    qcustomplot.h
+    qcustomplot.h \
+    settings.h
 
 FORMS += \
-    mainwindow.ui
+    information.ui \
+    mainwindow.ui \
+    settings.ui
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

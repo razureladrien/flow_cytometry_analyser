@@ -5,6 +5,8 @@
 #include "qcustomplot.h"
 #include "custompointselection.h"
 #include "plotwindow.h"
+#include "settings.h"
+#include "information.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -65,8 +67,18 @@ private slots:
 
     void selection(QList<int> keys);
 
+    void on_actionSettings_triggered();
+
+    void setMarkerSize(double size);
+
+    void on_actionInformations_triggered();
+
 private:
     Ui::MainWindow *ui;
+    Settings *settings_dialog;
+    InformationDialog *information_dialog;
+
+    QString file_name;
 
     QVector<double> qv_x, qv_y;
     QVector<double> qv_x_to_plot, qv_y_to_plot;
@@ -79,7 +91,7 @@ private:
     QString yscale = "lin";
 
     // metadata
-    int start_text, end_text, start_data, end_data, number_of_params, number_of_events;
+    int start_text, end_text, start_data, end_data, number_of_params = 0, number_of_events = 0;
     QList<int> byte_order;
     QString data_type;
 
@@ -95,7 +107,7 @@ private:
     QCPItemLine *line = nullptr;
     QCPItemEllipse *poly_closed = nullptr;
     QList<QCPItemLine *> polygon = {};
-    double global_scatter_size = 2;
+    double global_scatter_size = 1;
     double radius_x, radius_y;
     double start_v_x, start_v_y;
 
