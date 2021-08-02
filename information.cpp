@@ -9,7 +9,7 @@ InformationDialog::InformationDialog(QWidget *parent, QString file, int events, 
     setWindowTitle("Informations");
     QString parameters = "";
     for (auto i: parameters_list)
-        parameters += i+" | ";
+        parameters += i+" || ";
     ui->setupUi(this);
     ui->textEdit_file->setReadOnly(true);
     ui->textEdit_file->setText(file);
@@ -22,4 +22,9 @@ InformationDialog::InformationDialog(QWidget *parent, QString file, int events, 
 InformationDialog::~InformationDialog()
 {
     delete ui;
+}
+
+void InformationDialog::on_pushButton_clicked()
+{
+    delete this;
 }

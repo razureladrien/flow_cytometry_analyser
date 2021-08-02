@@ -15,6 +15,9 @@ public:
     explicit InformationDialog(QWidget *parent = nullptr, QString file = "", int events = 0, int params = 0, QList<QString> parameters_list = {});
     ~InformationDialog();
 
+private slots:
+    void on_pushButton_clicked();
+
 private:
     Ui::InformationDialog *ui;
 };

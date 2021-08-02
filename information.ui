@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>774</width>
-    <height>635</height>
+    <width>538</width>
+    <height>315</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -16,7 +16,7 @@
   <widget class="QTextEdit" name="textEdit_file">
    <property name="geometry">
     <rect>
-     <x>130</x>
+     <x>120</x>
      <y>40</y>
      <width>301</width>
      <height>31</height>
@@ -35,7 +35,7 @@
   <widget class="QTextEdit" name="textEdit_data_dim">
    <property name="geometry">
     <rect>
-     <x>130</x>
+     <x>120</x>
      <y>90</y>
      <width>301</width>
      <height>31</height>
@@ -48,7 +48,7 @@
   <widget class="QTextEdit" name="textEdit_parameters">
    <property name="geometry">
     <rect>
-     <x>130</x>
+     <x>120</x>
      <y>140</y>
      <width>301</width>
      <height>91</height>
@@ -61,7 +61,7 @@
   <widget class="QLabel" name="label_2">
    <property name="geometry">
     <rect>
-     <x>40</x>
+     <x>30</x>
      <y>90</y>
      <width>81</width>
      <height>31</height>
@@ -74,7 +74,7 @@
   <widget class="QLabel" name="label_4">
    <property name="geometry">
     <rect>
-     <x>60</x>
+     <x>50</x>
      <y>140</y>
      <width>61</width>
      <height>31</height>
@@ -87,30 +87,27 @@
   <widget class="QLabel" name="label_5">
    <property name="geometry">
     <rect>
-     <x>90</x>
+     <x>80</x>
      <y>40</y>
      <width>51</width>
      <height>31</height>
     </rect>
    </property>
    <property name="text">
-    <string>File</string>
+    <string>  File</string>
    </property>
   </widget>
-  <widget class="QDialogButtonBox" name="buttonBox">
+  <widget class="QPushButton" name="pushButton">
    <property name="geometry">
     <rect>
-     <x>10</x>
+     <x>240</x>
      <y>260</y>
-     <width>521</width>
+     <width>61</width>
      <height>21</height>
     </rect>
    </property>
-   <property name="standardButtons">
-    <set>QDialogButtonBox::Ok</set>
-   </property>
-   <property name="centerButtons">
-    <bool>true</bool>
+   <property name="text">
+    <string>OK</string>
    </property>
   </widget>
  </widget>

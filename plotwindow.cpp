@@ -56,16 +56,23 @@ PlotWindow::PlotWindow(QWidget *parent, QList<QString> params, QVector<QVector<f
 
     cbox_x = new QComboBox(button_box);
     cbox_y = new QComboBox(button_box);
+    cbox_x->setMinimumSize(40,5);
+    cbox_y->setMinimumSize(40,5);
 
     cbox_x->clear();
     cbox_y->clear();
     for (int i=0; i<parameters.length(); i++)
     {
         cbox_x->addItem(parameters[i]);
+        cbox_x->setItemData(i, parameters[i], Qt::ToolTipRole);
         cbox_y->addItem(parameters[i]);
+        cbox_y->setItemData(i, parameters[i], Qt::ToolTipRole);
     }
     cbox_x->setCurrentIndex(0);
     cbox_y->setCurrentIndex(1);
+
+    cbox_x->setToolTip(cbox_x->currentText());
+    cbox_y->setToolTip(cbox_y->currentText());
 
     setDataFromParam(cbox_x->currentIndex(),cbox_y->currentIndex());
 
@@ -81,10 +88,10 @@ PlotWindow::PlotWindow(QWidget *parent, QList<QString> params, QVector<QVector<f
     button_layout->addWidget(btn_ellipse,0,2,2,1);
     button_layout->addWidget(btn_free_form,0,3,2,1);
     button_layout->addWidget(btn_reset, 0,4,2,1);
-    button_layout->addWidget(cbox_x,0,5,2,1);
-    button_layout->addWidget(cbox_y,0,6,2,1);
-    button_layout->addWidget(btn_logx,0,7);
-    button_layout->addWidget(btn_logy,1,7);
+    button_layout->addWidget(cbox_x,0,5);
+    button_layout->addWidget(cbox_y,1,5);
+    button_layout->addWidget(btn_logx,0,6);
+    button_layout->addWidget(btn_logy,1,6);
     button_layout->setSizeConstraint(QLayout::SetMaximumSize);
 
     button_box->setLayout(button_layout);
@@ -572,6 +579,7 @@ void PlotWindow::on_cbox_x_activated()
 {
     getPlot()->graph(1)->data()->clear();
     setDataFromParam(cbox_x->currentIndex(),cbox_y->currentIndex());
+    cbox_x->setToolTip(cbox_x->currentText());
     QCPScatterStyle style;
     style.setShape(QCPScatterStyle::ssDisc);
     style.setSize(scatter_size);
@@ -588,6 +596,7 @@ void PlotWindow::on_cbox_y_activated()
 {
     getPlot()->graph(1)->data()->clear();
     setDataFromParam(cbox_x->currentIndex(),cbox_y->currentIndex());
+    cbox_y->setToolTip(cbox_y->currentText());
     QCPScatterStyle style;
     style.setShape(QCPScatterStyle::ssDisc);
     style.setSize(scatter_size);

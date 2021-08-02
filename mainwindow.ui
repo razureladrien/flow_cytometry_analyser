@@ -54,8 +54,15 @@
     <addaction name="separator"/>
     <addaction name="actionInformations"/>
    </widget>
+   <widget class="QMenu" name="menuSelection">
+    <property name="title">
+     <string>Selection</string>
+    </property>
+    <addaction name="actionAnotate_selection"/>
+   </widget>
    <addaction name="menuFile"/>
    <addaction name="menuNew_plot"/>
+   <addaction name="menuSelection"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <action name="actionOpen">
@@ -91,6 +98,11 @@
   <action name="actionInformations">
    <property name="text">
     <string>Informations</string>
+   </property>
+  </action>
+  <action name="actionAnotate_selection">
+   <property name="text">
+    <string>Anotate selection</string>
    </property>
   </action>
  </widget>
