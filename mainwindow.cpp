@@ -41,7 +41,7 @@ MainWindow::~MainWindow()
 
 /* parsing header of the FCS file
    returns bytes positions of meta data and data */
-void MainWindow::parseFileHeader(QString fileName)
+void MainWindow::parseFileHeader(QString fileName, DatasetContainer *d)
 {
     QFile file(fileName);
     if (!file.open(QIODevice::ReadOnly)) return;
@@ -49,19 +49,28 @@ void MainWindow::parseFileHeader(QString fileName)
     QString stringLine = QString::fromStdString(line.constData());
     QStringList fields = stringLine.split(' ', QString::SkipEmptyParts);
 
-    start_text = fields[1].toInt();
-    end_text = fields[2].toInt();
-    start_data = fields[3].toInt();
-    end_data = fields[4].toInt();
+    int start_text = fields[1].toInt();
+    int end_text = fields[2].toInt();
+    int start_data = fields[3].toInt();
+    int end_data = fields[4].toInt();
+
+    d->setHeaderData(start_text, end_text, start_data, end_data);
 
     file.close();
 }
 
 /* parsing "text data" to get metadata */
-void MainWindow::parseFileText(QString fileName)
+void MainWindow::parseFileText(QString fileName, DatasetContainer *d)
 {
     QFile file(fileName);
     if (!file.open(QIODevice::ReadOnly)) return;
+
+    int number_of_params;
+    int number_of_events;
+
+    QList<int> head_data = d->getHeaderData();
+    int start_text = head_data[0];
+    int end_text = head_data[1];
 
     file.seek(start_text);
     QString delimiter = QString::fromStdString(file.read(1).constData());
@@ -69,7 +78,9 @@ void MainWindow::parseFileText(QString fileName)
     QString stringLine = QString::fromStdString(line.constData());
     QStringList fields = stringLine.split(delimiter, QString::SkipEmptyParts);
 
-    parameters.clear();
+    QList<int> byte_order;
+    QString data_type;
+    QList<QString> parameters = {};
 
     for (int i=0; i<fields.length(); i++)
     {
@@ -91,15 +102,28 @@ void MainWindow::parseFileText(QString fileName)
             data_type = fields[i+1];
     }
 
+    d->setMetaData(byte_order, data_type);
+    d->setParameters(parameters);
+    d->setDataInfo(number_of_params, number_of_events);
+
     file.close();
 }
 
 /* parsing data byte by byte */
-void MainWindow::parseFileData(QString fileName)
+void MainWindow::parseFileData(QString fileName, DatasetContainer *d)
 {
     QFile file(fileName);
     if (!file.open(QIODevice::ReadOnly)) return;
     QVector<float> tmp_data;
+    QList<int> byte_order = d->getByteOrder();
+    QString data_type = d->getDataType();
+    QList<int> head_data = d->getHeaderData();
+    int start_data = head_data[2];
+    int end_data = head_data[3];
+
+    QList<int> data_info = d->getDataInfo();
+    int number_of_params = data_info[0];
+    int number_of_events = data_info[1];
 
     if (data_type == "I" && byte_order.length() == 2) // integer 16 bits
     {
@@ -187,8 +211,7 @@ void MainWindow::parseFileData(QString fileName)
             }
         }
     }
-    data = {};
-
+    QVector<QVector<float>> data = {};
     int iter = 0;
     for (int i=0; i<number_of_events; i++)
     {
@@ -200,6 +223,9 @@ void MainWindow::parseFileData(QString fileName)
         }
         data.push_back(tmp_vector);
     }
+
+    d->setData(data);
+
     file.close();
 
     //qDebug() << data.length() << data[0].length();
@@ -208,23 +234,44 @@ void MainWindow::parseFileData(QString fileName)
 /* opening file */
 void MainWindow::on_actionOpen_triggered()
 {
+    if (!data_container->getAnotatedData().isEmpty())
+    {
+        QMessageBox msgBox;
+        msgBox.setText("Open new file?");
+        msgBox.setInformativeText("The current annotations will be lost");
+        msgBox.setStandardButtons(QMessageBox::Ok | QMessageBox::Cancel);
+        msgBox.setDefaultButton(QMessageBox::Cancel);
+        msgBox.setIcon(QMessageBox::Warning);
+        int ret = msgBox.exec();
+        switch (ret) {
+        case  QMessageBox::Ok:
+        {
+            delete data_container;
+            break;
+        }
+        case QMessageBox::Cancel:
+            return;
+        }
+    }
+
     QStringList file = QFileDialog::getOpenFileNames(this, tr("Open File"),"/flowData",tr("CSV/FCS Files (*.csv *.fcs)"));
     if (!file.empty())
     {
         for (auto id : plot_windows.keys())
             plot_windows[id]->close_window();
-//        //clear all plots
-//        while(!plot_windows.isEmpty())
-//        {
-//            plot_windows.last()->close_window();
-//        }
+
         plot_queue = {5,4,3,2,1,0};
 
         // parse file
         file_name = file[0];
-        parseFileHeader(file_name);
-        parseFileText(file_name);
-        parseFileData(file_name);
+
+        //data_container = new DatasetContainer(file_name, number_of_params, number_of_events, parameters, data);
+        data_container = new DatasetContainer(file_name);
+
+        parseFileHeader(file_name, data_container);
+        parseFileText(file_name, data_container);
+        parseFileData(file_name, data_container);
+
 
         on_actionAdd_plot_triggered();
     }
@@ -235,12 +282,15 @@ void MainWindow::on_actionAdd_plot_triggered()
 {
     if (number_of_plots == 6)
     {
-        QErrorMessage* errorMessageDialog = new QErrorMessage(this);
-        errorMessageDialog->showMessage("The number of plots cannot exceed 6");
+        QMessageBox msgBox;
+        msgBox.setText("The number of plots cannot exceed 6.");
+        msgBox.setStandardButtons(QMessageBox::Ok);
+        msgBox.setIcon(QMessageBox::Critical);
+        msgBox.exec();
     } else if (number_of_plots < 6) {
         int id = plot_queue.last();
         plot_queue.pop_back();
-        PlotWindow *p = new PlotWindow(this, parameters, data, id, global_scatter_size);
+        PlotWindow *p = new PlotWindow(this, data_container->getParameters(), data_container->getData(), id, global_scatter_size);
 
         if (id < 3)
             ui->gridLayout->addWidget(p->getWindow(),0,id);
@@ -326,6 +376,21 @@ void MainWindow::setMarkerSize(double size)
 void MainWindow::on_actionInformations_triggered()
 {
     QString f = file_name.split("/").last();
-    information_dialog = new InformationDialog(this, f, number_of_events, number_of_params, parameters);
+    QList<int> data_info = data_container->getDataInfo();
+    QList<QString> params = data_container->getParameters();
+    information_dialog = new InformationDialog(this, f, data_info[1], data_info[0], params);
     information_dialog->show();
+}
+
+void MainWindow::on_actionAnotate_selection_triggered()
+{
+    bool ok;
+    QList<int> selection = plot_windows[0]->getSelection()->getSelectionPoints();
+    QString text = QInputDialog::getText(this, tr("Annotation"),
+                                         tr("Annotation name for the selection:"), QLineEdit::Normal,"", &ok);
+    if (ok && !text.isEmpty() && !selection.isEmpty())
+    {
+        data_container->addAnotated(text, selection);
+    }
+    qDebug() << data_container->getAnotatedData().keys();
 }

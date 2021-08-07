@@ -10,17 +10,21 @@ CONFIG += c++11
 
 SOURCES += \
     custompointselection.cpp \
+    datasetcontainer.cpp \
     information.cpp \
     main.cpp \
     mainwindow.cpp \
+    parser.cpp \
     plotwindow.cpp \
     qcustomplot.cpp \
     settings.cpp
 
 HEADERS += \
     custompointselection.h \
+    datasetcontainer.h \
     information.h \
     mainwindow.h \
+    parser.h \
     plotwindow.h \
     qcustomplot.h \
     settings.h

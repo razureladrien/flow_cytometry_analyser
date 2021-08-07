@@ -7,6 +7,7 @@
 #include "plotwindow.h"
 #include "settings.h"
 #include "information.h"
+#include "datasetcontainer.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -26,11 +27,9 @@ public:
     void setDataFromParam(int x_param, int y_param);
 
     QVector<double> getRange();
-    QVector<double> getX() {return qv_x; };
-    QVector<double> getY() {return qv_y; };
-    void parseFileHeader(QString fileName);
-    void parseFileText(QString fileName);
-    void parseFileData(QString fileName);
+    void parseFileHeader(QString fileName, DatasetContainer *data);
+    void parseFileText(QString fileName, DatasetContainer *data);
+    void parseFileData(QString fileName, DatasetContainer *data);
 
     void queuePlot(PlotWindow *p, QList<int> keys);
 
@@ -39,49 +38,25 @@ protected:
 
 
 private slots:
-//    void on_btn_zoom_clicked();
-//    void on_btn_navigate_clicked();
-//    void on_btn_ellipse_clicked();
-//    void on_btn_free_form_clicked();
-
-//    void startEllipseSelection(QMouseEvent *event);
-//    void moveEllipseSelection(QMouseEvent *event);
-//    void endEllipseSelection(QMouseEvent *event);
-
-//    void startEndLine(QMouseEvent *event);
-//    void moveLine(QMouseEvent *event);
-
-//    void axisScale(QMouseEvent *event);
-
 //    void on_btn_resolution_clicked();
-
     void on_actionOpen_triggered();
-
-//    void on_cbox_x_activated(const QString &arg1);
-
-//    void on_cbox_y_activated(const QString &arg1);
-
     void on_actionAdd_plot_triggered();
-
     void plot_deleted(int id);
-
     void selection(QList<int> keys);
-
     void on_actionSettings_triggered();
-
     void setMarkerSize(double size);
-
     void on_actionInformations_triggered();
+
+    void on_actionAnotate_selection_triggered();
 
 private:
     Ui::MainWindow *ui;
     Settings *settings_dialog;
     InformationDialog *information_dialog;
 
-    QString file_name;
+    DatasetContainer *data_container = new DatasetContainer("");
 
-    QVector<double> qv_x, qv_y;
-    QVector<double> qv_x_to_plot, qv_y_to_plot;
+    QString file_name;
 
     qint32 number_of_plots = 0;
     QList<int> plot_queue = {5,4,3,2,1,0};
@@ -91,12 +66,12 @@ private:
     QString yscale = "lin";
 
     // metadata
-    int start_text, end_text, start_data, end_data, number_of_params = 0, number_of_events = 0;
-    QList<int> byte_order;
-    QString data_type;
+    //int start_text, end_text, start_data, end_data, number_of_params = 0, number_of_events = 0;
+    //QList<int> byte_order;
+    //QString data_type;
 
-    QList<QString> parameters;
-    QVector<QVector<float>> data;
+    //QList<QString> parameters;
+    //QVector<QVector<float>> data;
 
     bool eActive=false;
     bool lActive=false;
