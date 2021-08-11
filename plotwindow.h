@@ -5,6 +5,11 @@
 #include "qcustomplot.h"
 #include "custompointselection.h"
 
+/*
+ * Class that contains everything concerning interactive plot window
+ * with its associated QPushButtons (navigate, ellipse selection, polygonal selection,
+ * scales, parameters, ...) and its QCustomPlot (see library QCustomPlot).
+ */
 class PlotWindow : public QObject
 {
     Q_OBJECT
@@ -20,8 +25,10 @@ public:
 
     void addPoint(int key, double x, double y);
     void clearData();
-    void plot(QCPScatterStyle scatterStyle,double graph_id, QMap<int, QVector<double>> qv_data);//QVector<double> x, QVector<double> y);
-    void plot_values(QCPScatterStyle scatterStyle, double graph_id, QList<int> keys);
+    void plot(QCPScatterStyle scatterStyle,double graph_id, QMap<int, QVector<double>> qv_data); // scatter plot values
+                                                                                                 // in qv_data
+    void plot_values(QCPScatterStyle scatterStyle, double graph_id, QList<int> keys); // retrieve values that correspond
+                                                                                      // to keys and scatter plot them
 
     void setParameters(QList<QString> p);
     void setData(QVector<QVector<float>> d);
@@ -33,6 +40,7 @@ public:
     QMap<int, QVector<double> > removeNonUnique(QMap<int, QVector<double> > map1, QList<int> keys);
 
 public slots:
+    // buttons click
     void close_window();
     void on_btn_zoom_clicked();
     void on_btn_navigate_clicked();
@@ -40,31 +48,36 @@ public slots:
     void on_btn_free_form_clicked();
     void on_btn_reset_clicked();
 
+    // ellipse drawing and selection
     void startEllipseSelection(QMouseEvent *event);
     void moveEllipseSelection(QMouseEvent *event);
     void endEllipseSelection(QMouseEvent *event);
 
+    // polygon drawing and selection
     void startEndLine(QMouseEvent *event);
     void moveLine(QMouseEvent *event);
 
 //    void on_btn_resolution_clicked();
 
+    // changing parameters
     void on_cbox_x_activated();
     void on_cbox_y_activated();
 
+    // changing axis scale (logarithmic or linear)
     void axisScaleX(int s);
     void axisScaleY(int s);
 
+    // click on the axis to change its scale individualy
+    // with the mouse wheel
     void mouseOverAxis(QMouseEvent *event);
     void xAxisSelect(QCPAxis::SelectableParts);
     void yAxisSelect(QCPAxis::SelectableParts);
-
     void moveAxisDragging(QWheelEvent*);
 
 signals:
-    void deleted(int);
-    void ellipse_selection_closed(QList<int> selection);
-    void free_selection_closed(QList<int> selection);
+    void deleted(int); // signal emitted when a plot is closed
+    void ellipse_selection_closed(QList<int> selection); // signal emitted when an ellipse selection has been made
+    void free_selection_closed(QList<int> selection); // signal emitted when a free form selection has been made
 
 private:
     QCustomPlot *plot_widget;
@@ -77,7 +90,6 @@ private:
     QPushButton *btn_zoom, *btn_navigate, *btn_ellipse, *btn_free_form, *btn_resolution, *close_btn, *btn_reset;
     QComboBox *cbox_x, *cbox_y;
 
-    QVector<double> qv_x_to_plot, qv_y_to_plot;
     int plot_id;
 
     QString xscale = "lin";
@@ -88,12 +100,6 @@ private:
 
     QMap<int, QVector<double>> data_dic;
     QMap<int, QVector<double>> data_dic_low_res;
-
-    bool eActive=false;
-    bool lActive=false;
-    bool xdActive=false;
-    bool ydActive=false;
-    bool started_line=false;
 
     QCPItemEllipse *ellipse = nullptr;
     CustomPointSelection *selectionObj = nullptr;
@@ -106,12 +112,20 @@ private:
     double start_drag_x, start_drag_y;
     double xdActive_tmp, ydActive_tmp;
 
+    // variables to control if some actions are in progress
+    bool eActive=false;
+    bool lActive=false;
+    bool xdActive=false;
+    bool ydActive=false;
+    bool started_line=false;
     bool ellipse_select=false;
     bool free_form_select=false;
     bool rescale_flag=true;
-    bool resolution_flag=true; // true = high res, false = low res
+    //bool resolution_flag=true; // true = high res, false = low res
     bool xAxis_selected=false;
     bool yAxis_selected=false;
+
+    // used to change de aspect of the cursor
     QCursor current_cursor;
 
 };

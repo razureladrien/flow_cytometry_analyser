@@ -3,6 +3,10 @@
 
 #include <QDialog>
 
+/*
+ * UI that displays a setting window
+ * For now you can change the size of the dots in the plots
+ */
 namespace Ui {
 class Settings;
 }

@@ -4,7 +4,14 @@
 #ifndef DATASETCONTAINER_H
 #define DATASETCONTAINER_H
 
-
+/*
+ * Class that contains everything concerning the data :
+ * Name of the file,
+ * Metadata,
+ * Parameters,
+ * Rough data,
+ * Data anotated by the user.
+ */
 class DatasetContainer
 {
 public:
@@ -31,11 +38,12 @@ public:
 private:
     QString file_name;
 
-    // metadata
+    // FCS metadata
     int start_text, end_text, start_data, end_data, number_of_params = 0, number_of_events = 0;
     QList<int> byte_order;
     QString data_type;
 
+    // global data
     QList<QString> parameters;
     QVector<QVector<float>> data;
 

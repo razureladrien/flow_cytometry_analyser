@@ -3,6 +3,9 @@
 
 #include <QDialog>
 
+/*
+ * UI that displays data informations
+ */
 namespace Ui {
 class InformationDialog;
 }

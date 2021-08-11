@@ -39,8 +39,6 @@ void CustomPointSelection::clearVerteces()
 void CustomPointSelection::clearSelectionPoints()
 {
     selection_keys.clear();
-    select_x.clear();
-    select_y.clear();
 }
 
 void CustomPointSelection::setKeys(QList<int> keys)
@@ -48,7 +46,10 @@ void CustomPointSelection::setKeys(QList<int> keys)
     selection_keys = keys;
 }
 
-/* return data points that are within the *ellipse */
+/*
+ * Returns data points that are within the QCPItemEllipse
+ * There is 4 cases depending on the axis scales : linear or log
+*/
 void CustomPointSelection::pointsInEllipse(QCPItemEllipse *ellipse, QMap<int, QVector<double>> data, QString xscale, QString yscale)
 {
     clearSelectionPoints();

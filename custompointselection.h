@@ -4,13 +4,15 @@
 #define CUSTOMPOINTSELECTION_H
 
 
-
+/*
+ * This class is used to compute whether points are in a given
+ * geometrical form (polygon, ellipse) or not
+ */
 class CustomPointSelection
 {
 private:
-    QList<int> selection_keys;
-    QVector<double> select_x, select_y;
-    QVector<double> verteces_x, verteces_y;
+    QList<int> selection_keys; // contains the keys of the selected points
+    QVector<double> verteces_x, verteces_y; // polygon coordinates
 public:
     CustomPointSelection();
     ~CustomPointSelection();

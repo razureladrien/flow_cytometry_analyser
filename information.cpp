@@ -6,6 +6,7 @@ InformationDialog::InformationDialog(QWidget *parent, QString file, int events, 
     QDialog(parent),
     ui(new Ui::InformationDialog)
 {
+    /* retrieving basic informations from DatasetContainer and display it */
     setWindowTitle("Informations");
     QString parameters = "";
     for (auto i: parameters_list)
