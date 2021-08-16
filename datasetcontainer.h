@@ -1,8 +1,12 @@
 #include <QWidget>
 #include <QMap>
+#include <Eigen/Dense>
+#include <QDebug>
 
 #ifndef DATASETCONTAINER_H
 #define DATASETCONTAINER_H
+
+using namespace Eigen;
 
 /*
  * Class that contains everything concerning the data :
@@ -19,14 +23,14 @@ public:
 
     // geter and seters
     void setParameters(QList<QString> p){ parameters = p; };
-    void setData(QVector<QVector<float>> d){ data = d; };
+    void setData(QVector<QVector<float>> d);;
     void setAnotatedData(QMap<QString, QList<int>> d){ anotated_data = d; };
     void setHeaderData(int start_t, int end_t, int start_d, int end_d);
     void setMetaData(QList<int> b_order, QString d_type);
     void setDataInfo(int n_params, int n_events);
 
     QList<QString> getParameters(){ return parameters; };
-    QVector<QVector<float>> getData(){ return data; };
+    MatrixXd getDataMat(){ return data_mat; };
     QMap<QString, QList<int>> getAnotatedData(){ return anotated_data; };
     QList<int> getDataInfo();
     QList<int> getByteOrder(){ return byte_order; };
@@ -39,13 +43,14 @@ private:
     QString file_name;
 
     // FCS metadata
-    int start_text, end_text, start_data, end_data, number_of_params = 0, number_of_events = 0;
+    int start_text, end_text, start_data, end_data;
     QList<int> byte_order;
     QString data_type;
 
     // global data
+    int number_of_params = 0, number_of_events = 0;
     QList<QString> parameters;
-    QVector<QVector<float>> data;
+    MatrixXd data_mat;
 
     QMap<QString, QList<int>> anotated_data = {};
 };

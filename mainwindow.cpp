@@ -44,6 +44,7 @@ MainWindow::~MainWindow()
 /* opening file */
 void MainWindow::on_actionOpen_triggered()
 {
+    selectionObj->clearSelectionPoints();
     // check if user is ready to lose his annotations
     if (!data_container->getAnotatedData().isEmpty())
     {
@@ -80,10 +81,20 @@ void MainWindow::on_actionOpen_triggered()
         // creating the DatasetContainer
         data_container = new DatasetContainer(file_name);
 
-        // calling parser methods
-        parser.parseFileHeader(file_name, data_container);
-        parser.parseFileText(file_name, data_container);
-        parser.parseFileData(file_name, data_container);
+        QFileInfo fi(file_name);
+        QString file_extension = fi.suffix();
+
+        if((file_extension=="fcs") || (file_extension=="FCS"))
+        {
+            // calling parser methods
+            parser_FCS.parseFileHeader(file_name, data_container);
+            parser_FCS.parseFileText(file_name, data_container);
+            parser_FCS.parseFileData(file_name, data_container);
+        } else if((file_extension=="csv") || (file_extension=="CSV"))
+        {
+            parser_CSV.parseFileText(file_name, data_container);
+            parser_CSV.parseFileData(file_name, data_container);
+        }
 
 
         on_actionAdd_plot_triggered();
@@ -103,7 +114,7 @@ void MainWindow::on_actionAdd_plot_triggered()
     } else if (number_of_plots < 6) {
         int id = plot_queue.last();
         plot_queue.pop_back();
-        PlotWindow *p = new PlotWindow(this, data_container->getParameters(), data_container->getData(), id, global_scatter_size);
+        PlotWindow *p = new PlotWindow(this, data_container->getParameters(), data_container,selectionObj, id, global_scatter_size);
 
         if (id < 3)
             ui->gridLayout->addWidget(p->getWindow(),0,id);
@@ -205,5 +216,4 @@ void MainWindow::on_actionAnotate_selection_triggered()
     {
         data_container->addAnotated(text, selection);
     }
-    qDebug() << data_container->getAnotatedData().keys();
 }

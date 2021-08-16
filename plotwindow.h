@@ -2,9 +2,12 @@
 #define PLOTWINDOW_H
 
 #include <QWidget>
+#include <Eigen/Dense>
+#include "datasetcontainer.h"
 #include "qcustomplot.h"
 #include "custompointselection.h"
 
+using namespace Eigen;
 /*
  * Class that contains everything concerning interactive plot window
  * with its associated QPushButtons (navigate, ellipse selection, polygonal selection,
@@ -14,7 +17,7 @@ class PlotWindow : public QObject
 {
     Q_OBJECT
 public:
-    PlotWindow(QWidget *parent = nullptr, QList<QString> params = {}, QVector<QVector<float>> data = {}, int id = 0, double size = 1);
+    PlotWindow(QWidget *parent = nullptr, QList<QString> params = {}, DatasetContainer *data = nullptr, CustomPointSelection *select = nullptr, int id = 0, double size = 1);
     ~PlotWindow();
 
     QGroupBox* getWindow();
@@ -31,7 +34,7 @@ public:
                                                                                       // to keys and scatter plot them
 
     void setParameters(QList<QString> p);
-    void setData(QVector<QVector<float>> d);
+    void setData(DatasetContainer *d);
     void setID(int id){plot_id = id;};
     void setScatterSize(double s){scatter_size = s;};
 
@@ -96,7 +99,7 @@ private:
     QString yscale = "lin";
 
     QList<QString> parameters;
-    QVector<QVector<float>> data;
+    DatasetContainer *data_container = nullptr;
 
     QMap<int, QVector<double>> data_dic;
     QMap<int, QVector<double>> data_dic_low_res;

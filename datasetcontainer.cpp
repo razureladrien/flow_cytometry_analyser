@@ -6,7 +6,25 @@ DatasetContainer::DatasetContainer(QString f, int n_params, int n_events, QList<
     number_of_params = n_params;
     number_of_events = n_events;
     parameters = p;
-    data = d;
+    data_mat.resize(n_events,n_params);
+    for (int i=0; i < number_of_events; i++)
+    {
+        for (int j=0; j < number_of_params; j++)
+        {
+            data_mat(i,j) = d[i][j];
+        }
+    }
+}
+
+void DatasetContainer::setData(QVector<QVector<float>> d)
+{
+    for (int i=0; i < number_of_events; i++)
+    {
+        for (int j=0; j < number_of_params; j++)
+        {
+            data_mat(i,j) = d[i][j];
+        }
+    }
 }
 
 void DatasetContainer::setHeaderData(int start_t, int end_t, int start_d, int end_d)
@@ -27,6 +45,7 @@ void DatasetContainer::setDataInfo(int n_params, int n_events)
 {
     number_of_events = n_events;
     number_of_params = n_params;
+    data_mat.resize(n_events,n_params);
 }
 
 QList<int> DatasetContainer::getDataInfo()

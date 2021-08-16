@@ -1,7 +1,8 @@
 #include "plotwindow.h"
 
-PlotWindow::PlotWindow(QWidget *parent, QList<QString> params, QVector<QVector<float>> data, int id, double size)
+PlotWindow::PlotWindow(QWidget *parent, QList<QString> params, DatasetContainer *data, CustomPointSelection *select, int id, double size)
 {
+    selectionObj = select;
     setParameters(params);
     setData(data);
     setID(id);
@@ -29,8 +30,6 @@ PlotWindow::PlotWindow(QWidget *parent, QList<QString> params, QVector<QVector<f
     plot_widget->yAxis->setTickPen(QPen(Qt::gray));
     plot_widget->yAxis->setSubTickPen(QPen(Qt::gray));
 
-
-    selectionObj = new CustomPointSelection();
     poly_closed = new QCPItemEllipse(getPlot());
     poly_closed->setPen(Qt::NoPen);
     poly_closed->setLayer("selectionLayer");
@@ -171,9 +170,13 @@ void PlotWindow::clearData()
 void PlotWindow::setDataFromParam(int x_param, int y_param)
 {
     clearData();
-    for (int i=0; i<data.length(); i++)
+    MatrixXd data_mat = data_container->getDataMat();
+    int l = data_mat.rows();
+    for (int i=0; i<l; i++)
     {
-        addPoint(i, data[i][x_param], data[i][y_param]);
+        //addPoint(i, data[i][x_param], data[i][y_param]);
+
+        addPoint(i, data_mat(i,x_param), data_mat(i,y_param));
     }
 }
 
@@ -182,7 +185,6 @@ void PlotWindow::setDataFromParam(int x_param, int y_param)
 /* input : QMap */
 void PlotWindow::plot(QCPScatterStyle scatterStyle, double graph_id, QMap<int, QVector<double>> qv_data)//QVector<double> x, QVector<double> y)
 {
-
     QVector<double> x,y;
     QList<QVector<double>> values = qv_data.values();
 
@@ -245,9 +247,9 @@ void PlotWindow::setParameters(QList<QString> p)
     parameters = p;
 }
 
-void PlotWindow::setData(QVector<QVector<float>> d)
+void PlotWindow::setData(DatasetContainer *d)
 {
-    data = d;
+    data_container = d;
 }
 
 

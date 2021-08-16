@@ -15,6 +15,8 @@ SOURCES += \
     main.cpp \
     mainwindow.cpp \
     parser.cpp \
+    parsercsv.cpp \
+    parserfcs.cpp \
     plotwindow.cpp \
     qcustomplot.cpp \
     settings.cpp
@@ -25,6 +27,8 @@ HEADERS += \
     information.h \
     mainwindow.h \
     parser.h \
+    parsercsv.h \
+    parserfcs.h \
     plotwindow.h \
     qcustomplot.h \
     settings.h
@@ -33,6 +37,8 @@ FORMS += \
     information.ui \
     mainwindow.ui \
     settings.ui
+
+INCLUDEPATH += D:/qt_code/eigen
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

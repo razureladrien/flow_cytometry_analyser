@@ -8,7 +8,8 @@
 #include "settings.h"
 #include "information.h"
 #include "datasetcontainer.h"
-#include "parser.h"
+#include "parserfcs.h"
+#include "parsercsv.h"
 
 /*
  * Class that contains the main UI with a list of PlotWindow instances.
@@ -46,7 +47,9 @@ private:
     InformationDialog *information_dialog;
 
     DatasetContainer *data_container = new DatasetContainer("");
-    Parser parser = Parser();
+    ParserFCS parser_FCS = ParserFCS();
+    ParserCSV parser_CSV = ParserCSV();
+    CustomPointSelection *selectionObj = new CustomPointSelection();
 
     QString file_name;
 
