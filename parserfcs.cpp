@@ -23,7 +23,7 @@ void ParserFCS::parseFileHeader(QString fileName, DatasetContainer *d)
     file.close();
 }
 
-void ParserFCS::parseFileText(QString fileName, DatasetContainer *d)
+void ParserFCS::parseFileInfo(QString fileName, DatasetContainer *d)
 {
     QFile file(fileName);
     if (!file.open(QIODevice::ReadOnly)) return;

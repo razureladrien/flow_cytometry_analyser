@@ -11,8 +11,7 @@
 class Parser
 {
 public:
-    virtual void parseFileHeader(QString fileName, DatasetContainer *d) = 0;
-    virtual void parseFileText(QString fileName, DatasetContainer *d) = 0;
+    virtual void parseFileInfo(QString fileName, DatasetContainer *d) = 0;
     virtual void parseFileData(QString fileName, DatasetContainer *d) = 0;
 };
 

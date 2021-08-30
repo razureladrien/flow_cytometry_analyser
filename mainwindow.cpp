@@ -59,7 +59,6 @@ void MainWindow::on_actionOpen_triggered()
         switch (ret) {
         case  QMessageBox::Ok:
         {
-            delete data_container;
             break;
         }
         case QMessageBox::Cancel:
@@ -70,6 +69,7 @@ void MainWindow::on_actionOpen_triggered()
     QStringList file = QFileDialog::getOpenFileNames(this, tr("Open File"),"/flowData",tr("CSV/FCS Files (*.csv *.fcs)"));
     if (!file.empty())
     {
+        delete data_container;
         for (auto id : plot_windows.keys())
             plot_windows[id]->close_window();
 
@@ -88,11 +88,11 @@ void MainWindow::on_actionOpen_triggered()
         {
             // calling parser methods
             parser_FCS.parseFileHeader(file_name, data_container);
-            parser_FCS.parseFileText(file_name, data_container);
+            parser_FCS.parseFileInfo(file_name, data_container);
             parser_FCS.parseFileData(file_name, data_container);
         } else if((file_extension=="csv") || (file_extension=="CSV"))
         {
-            parser_CSV.parseFileText(file_name, data_container);
+            parser_CSV.parseFileInfo(file_name, data_container);
             parser_CSV.parseFileData(file_name, data_container);
         }
 
@@ -153,14 +153,17 @@ void MainWindow::plot_deleted(int id)
    to select data in every plots */
 void MainWindow::selection(QList<int> keys)
 {
+    plot_windows[0]->getSelection()->setKeys(keys);
     //select in every plots
+    QElapsedTimer timer;
+    timer.start();
     for (auto p : plot_windows.keys())
     {
         QMap<int, QVector<double>> plot_data = removeNonUnique(plot_windows[p]->getData(),keys);
         plot_windows[p]->plot(QCPScatterStyle(QCPScatterStyle::ssDisc, Qt::black, global_scatter_size),0,plot_data);
         plot_windows[p]->plot_values(QCPScatterStyle(QCPScatterStyle::ssDisc, Qt::red, global_scatter_size),1,keys);
-        plot_windows[p]->getSelection()->setKeys(keys);
     }
+    qDebug() << "Global plot time: " << timer.elapsed();
 }
 
 QMap<int, QVector<double>> MainWindow::removeNonUnique(QMap<int, QVector<double>> map1, QList<int> keys)

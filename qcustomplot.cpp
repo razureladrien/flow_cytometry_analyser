@@ -17838,13 +17838,16 @@ void QCPAxisRect::mousePressEvent(QMouseEvent *event, const QVariant &details)
   
   \see mousePressEvent, mouseReleaseEvent
 */
+  QElapsedTimer timer;
 void QCPAxisRect::mouseMoveEvent(QMouseEvent *event, const QPointF &startPos)
 {
   Q_UNUSED(startPos)
   // Mouse range dragging interaction:
   if (mDragging && mParentPlot->interactions().testFlag(QCP::iRangeDrag))
   {
-    
+    double fps = 1/(double(timer.elapsed())/1000);
+    //qDebug() << fps << "fps";
+    timer.restart();
     if (mRangeDrag.testFlag(Qt::Horizontal))
     {
       for (int i=0; i<mRangeDragHorzAxis.size(); ++i)

@@ -28,6 +28,7 @@ public:
 
     void pointsInEllipse(QCPItemEllipse *ellipse, QMap<int, QVector<double>> data, QString xscale, QString yscale);
     void pointsInPoly(QMap<int, QVector<double>> data, QString xscale, QString yscale);
+    double isLeft(double P0_x, double P0_y, double P1_x, double P1_y, double P2_x, double P2_y);
 };
 
 #endif // CUSTOMPOINTSELECTION_H

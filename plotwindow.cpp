@@ -21,6 +21,7 @@ PlotWindow::PlotWindow(QWidget *parent, QList<QString> params, DatasetContainer 
     plot_widget->addLayer("selectionLayer", 0, QCustomPlot::limAbove);
     plot_widget->layer("selectionLayer")->setMode(QCPLayer::lmBuffered);
     plot_widget->setNoAntialiasingOnDrag(true);
+    plot_widget->setNotAntialiasedElements(QCP::aeAll);
     plot_widget->xAxis->setBasePen(QPen(Qt::gray));
     plot_widget->xAxis->setLabelColor(Qt::gray);
     plot_widget->xAxis->setTickPen(QPen(Qt::gray));
@@ -193,7 +194,6 @@ void PlotWindow::plot(QCPScatterStyle scatterStyle, double graph_id, QMap<int, Q
         x.append(values[i][0]);
         y.append(values[i][1]);
     }
-
     getPlot()->graph(graph_id)->setData(x, y);
 
     /* scale the axis for the first display */
@@ -279,7 +279,6 @@ void PlotWindow::on_btn_zoom_clicked()
     {
         ellipse->topLeft->setCoords(0,0);
         ellipse->bottomRight->setCoords(0,0);
-        selectionObj->clearSelectionPoints();
     }
 
     /* set zoom interaction */
@@ -311,7 +310,6 @@ void PlotWindow::on_btn_navigate_clicked()
     lActive = false;
     while(!polygon.isEmpty())
         getPlot()->removeItem(polygon.takeFirst());
-    selectionObj->clearSelectionPoints();
 
     if (ellipse != nullptr)
     {
@@ -321,6 +319,7 @@ void PlotWindow::on_btn_navigate_clicked()
     /* set naviguate interaction */
     getPlot()->setInteraction(QCP::iRangeDrag, true);
     getPlot()->setNoAntialiasingOnDrag(true);
+    getPlot()->setNotAntialiasedElements(QCP::aeAll);
     getPlot()->setInteraction(QCP::iRangeZoom);
     getPlot()->setSelectionRectMode(QCP::srmNone);
     getPlot()->replot();
@@ -362,7 +361,6 @@ void PlotWindow::on_btn_ellipse_clicked()
     while(!polygon.isEmpty())
         getPlot()->removeItem(polygon.takeFirst());
 
-    selectionObj->clearSelectionPoints();
     getPlot()->graph(1)->data()->clear();
     ellipse->setPen(QPen(QBrush(Qt::red), 1.5, Qt::DashLine));
     getPlot()->setInteraction(QCP::iRangeDrag, false);
@@ -392,7 +390,6 @@ void PlotWindow::on_btn_free_form_clicked()
     while(!polygon.isEmpty())
         getPlot()->removeItem(polygon.takeFirst());
 
-    selectionObj->clearSelectionPoints();
     getPlot()->graph(1)->data()->clear();
     plot(QCPScatterStyle(QCPScatterStyle::ssDisc, Qt::black, scatter_size), 0, data_dic);
 
@@ -442,17 +439,16 @@ void PlotWindow::endEllipseSelection(QMouseEvent *event)
         double y_pos = getPlot()->yAxis->pixelToCoord(event->pos().y());
         ellipse->bottomRight->setCoords(x_pos, y_pos);
         eActive = false;
+        QElapsedTimer timer;
+        timer.start();
         selectionObj->pointsInEllipse(ellipse, data_dic, xscale, yscale);
-
+        //qDebug() << "Ellipse selection time: " << timer.elapsed();
         if (ellipse != nullptr)
         {
             ellipse->topLeft->setCoords(0, 0);
             ellipse->bottomRight->setCoords(0,0);
         }
-
         emit ellipse_selection_closed(selectionObj->getSelectionPoints());
-        //plot(QCPScatterStyle(QCPScatterStyle::ssDisc, Qt::gray, 1), 0, getX(),getY());
-        //plot(QCPScatterStyle(QCPScatterStyle::ssDisc, Qt::black, 1), 1, selectionObj->getSelectionPoints()[0],selectionObj->getSelectionPoints()[1]);
     }
 }
 
@@ -525,8 +521,10 @@ void PlotWindow::startEndLine(QMouseEvent *event)
         selectionObj->addVertex(start_v_x, start_v_y);
         lActive = false;
         poly_closed->setBrush(Qt::NoBrush);
-//        int t = clock();
+        QElapsedTimer timer;
+        timer.start();
         selectionObj->pointsInPoly(data_dic, xscale, yscale);
+        //qDebug() << "Polygonal selection time :" << timer.elapsed();
 
         /* erase polygon on the plot */
         while(!polygon.isEmpty())
@@ -579,7 +577,7 @@ void PlotWindow::moveLine(QMouseEvent *event)
 
 void PlotWindow::on_cbox_x_activated()
 {
-    getPlot()->graph(1)->data()->clear();
+    //getPlot()->graph(1)->data()->clear();
     setDataFromParam(cbox_x->currentIndex(),cbox_y->currentIndex());
     cbox_x->setToolTip(cbox_x->currentText());
     QCPScatterStyle style;
@@ -596,7 +594,7 @@ void PlotWindow::on_cbox_x_activated()
 
 void PlotWindow::on_cbox_y_activated()
 {
-    getPlot()->graph(1)->data()->clear();
+    //getPlot()->graph(1)->data()->clear();
     setDataFromParam(cbox_x->currentIndex(),cbox_y->currentIndex());
     cbox_y->setToolTip(cbox_y->currentText());
     QCPScatterStyle style;

@@ -6,12 +6,8 @@ ParserCSV::ParserCSV()
 
 }
 
-void ParserCSV::parseFileHeader(QString fileName, DatasetContainer *d)
-{
 
-}
-
-void ParserCSV::parseFileText(QString fileName, DatasetContainer *d)
+void ParserCSV::parseFileInfo(QString fileName, DatasetContainer *d)
 {
     QFile file(fileName);
     int n_params, n_events=0;
