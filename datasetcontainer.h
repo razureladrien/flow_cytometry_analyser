@@ -25,7 +25,7 @@ public:
     void setParameters(QList<QString> p){ parameters = p; };
     void setData(QVector<QVector<float>> d);;
     void setAnotatedData(QMap<QString, QList<int>> d){ anotated_data = d; };
-    void setHeaderData(int start_t, int end_t, int start_d, int end_d);
+    void setHeaderTextOffset(int start_t, int end_t);
     void setHeaderDataOffset(int start_d, int end_d);
     void setMetaData(QList<int> b_order, QString d_type);
     void setDataInfo(int n_params, int n_events);
@@ -36,7 +36,8 @@ public:
     QMap<QString, QList<int>> getAnotatedData(){ return anotated_data; };
     QList<int> getDataInfo();
     QList<int> getByteOrder(){ return byte_order; };
-    QList<int> getHeaderData(){ return {start_text, end_text, start_data, end_data}; }
+    QList<int> getTextOffset(){ return {start_text, end_text}; }
+    QList<int> getDataOffset(){ return {start_data, end_data}; }
     QString getDataType(){ return data_type; };
 
     void addAnotated(QString key, QList<int> points);

@@ -27,12 +27,10 @@ void DatasetContainer::setData(QVector<QVector<float>> d)
     }
 }
 
-void DatasetContainer::setHeaderData(int start_t, int end_t, int start_d, int end_d)
+void DatasetContainer::setHeaderTextOffset(int start_t, int end_t)
 {
     start_text = start_t;
     end_text = end_t;
-    start_data = start_d;
-    end_data = end_d;
 }
 
 void DatasetContainer::setHeaderDataOffset(int start_d, int end_d)

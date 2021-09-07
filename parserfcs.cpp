@@ -18,8 +18,8 @@ void ParserFCS::parseFileHeader(QString fileName, DatasetContainer *d)
     int start_data = fields[3].toInt();
     int end_data = fields[4].toInt();
 
-    d->setHeaderData(start_text, end_text, start_data, end_data);
-        qDebug() << start_text << end_text << start_data << end_data;
+    d->setHeaderTextOffset(start_text, end_text);
+    d->setHeaderDataOffset(start_data,end_data);
     file.close();
 }
 
@@ -31,7 +31,7 @@ void ParserFCS::parseFileInfo(QString fileName, DatasetContainer *d)
     int number_of_params;
     int number_of_events;
 
-    QList<int> head_data = d->getHeaderData();
+    QList<int> head_data = d->getTextOffset();
     int start_text = head_data[0];
     int end_text = head_data[1];
 
@@ -87,9 +87,10 @@ void ParserFCS::parseFileData(QString fileName, DatasetContainer *d)
     QVector<float> tmp_data;
     QList<int> byte_order = d->getByteOrder();
     QString data_type = d->getDataType();
-    QList<int> head_data = d->getHeaderData();
-    int start_data = head_data[2];
-    int end_data = head_data[3];
+    QList<int> head_data = d->getDataOffset();
+    int start_data = head_data[0];
+    int end_data = head_data[1];
+    qDebug() << start_data << end_data;
 
     QList<int> data_info = d->getDataInfo();
     int number_of_params = data_info[0];
