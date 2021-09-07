@@ -12,6 +12,8 @@ MainWindow::MainWindow(QWidget *parent)
 
     // initialize with one plot opened
     on_actionAdd_plot_triggered();
+
+
 }
 
 MainWindow::~MainWindow()
@@ -195,7 +197,7 @@ void MainWindow::setMarkerSize(double size)
             QMap<int, QVector<double>> plot_data = removeNonUnique(plot_windows[p]->getData(),keys);
             plot_windows[p]->setScatterSize(size);
             plot_windows[p]->plot(QCPScatterStyle(QCPScatterStyle::ssDisc, Qt::black, global_scatter_size),0, plot_data);
-            plot_windows[p]->plot_values(QCPScatterStyle(QCPScatterStyle::ssDisc, Qt::red, global_scatter_size),1,plot_windows[p]->getSelection()->getSelectionPoints());
+            plot_windows[p]->plot_values(QCPScatterStyle(QCPScatterStyle::ssDisc, Qt::red, global_scatter_size),0,plot_windows[p]->getSelection()->getSelectionPoints());
         }
     }
 }

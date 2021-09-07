@@ -19,7 +19,7 @@ void ParserFCS::parseFileHeader(QString fileName, DatasetContainer *d)
     int end_data = fields[4].toInt();
 
     d->setHeaderData(start_text, end_text, start_data, end_data);
-
+        qDebug() << start_text << end_text << start_data << end_data;
     file.close();
 }
 
@@ -34,6 +34,8 @@ void ParserFCS::parseFileInfo(QString fileName, DatasetContainer *d)
     QList<int> head_data = d->getHeaderData();
     int start_text = head_data[0];
     int end_text = head_data[1];
+
+    int start_data, end_data;
 
     file.seek(start_text);
     QString delimiter = QString::fromStdString(file.read(1).constData());
@@ -63,11 +65,16 @@ void ParserFCS::parseFileInfo(QString fileName, DatasetContainer *d)
         }
         else if (tmp == "$DATATYPE")
             data_type = fields[i+1];
+        else if (tmp == "$BEGINDATA")
+            start_data = fields[i+1].toInt();
+        else if (tmp == "$ENDDATA")
+            end_data = fields[i+1].toInt();
     }
 
     d->setMetaData(byte_order, data_type);
     d->setParameters(parameters);
     d->setDataInfo(number_of_params, number_of_events);
+    d->setHeaderDataOffset(start_data, end_data);
 
     file.close();
 }

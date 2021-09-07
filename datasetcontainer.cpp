@@ -35,6 +35,12 @@ void DatasetContainer::setHeaderData(int start_t, int end_t, int start_d, int en
     end_data = end_d;
 }
 
+void DatasetContainer::setHeaderDataOffset(int start_d, int end_d)
+{
+    start_data = start_d;
+    end_data = end_d;
+}
+
 void DatasetContainer::setMetaData(QList<int> b_order, QString d_type)
 {
     byte_order = b_order;

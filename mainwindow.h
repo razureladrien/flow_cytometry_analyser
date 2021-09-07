@@ -28,6 +28,7 @@ public:
     ~MainWindow();
 
     QMap<int, QVector<double> > removeNonUnique(QMap<int, QVector<double> > map1, QList<int> keys);
+    DatasetContainer* getContainer() {return data_container;};
 
 
 private slots:

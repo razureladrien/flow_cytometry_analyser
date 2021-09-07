@@ -74,13 +74,13 @@ PlotWindow::PlotWindow(QWidget *parent, QList<QString> params, DatasetContainer 
     cbox_x->setToolTip(cbox_x->currentText());
     cbox_y->setToolTip(cbox_y->currentText());
 
-    setDataFromParam(cbox_x->currentIndex(),cbox_y->currentIndex());
+    if (data_container->getDataInfo()[1] != 0)
+        setDataFromParam(cbox_x->currentIndex(),cbox_y->currentIndex());
 
     QCPScatterStyle style;
     style.setShape(QCPScatterStyle::ssDisc);
     style.setSize(scatter_size);
     style.setPen(QPen(Qt::black));
-
     plot(style, 0, data_dic);
 
     button_layout->addWidget(btn_zoom,0,0,2,1);
@@ -171,13 +171,15 @@ void PlotWindow::clearData()
 void PlotWindow::setDataFromParam(int x_param, int y_param)
 {
     clearData();
-    MatrixXd data_mat = data_container->getDataMat();
-    int l = data_mat.rows();
-    for (int i=0; i<l; i++)
-    {
-        //addPoint(i, data[i][x_param], data[i][y_param]);
+    //MatrixXd data_mat = data_container->getDataMat();
+    // int l = data_mat.rows();
+    VectorXd data_x = data_container->getDataCol(x_param);
+    VectorXd data_y = data_container->getDataCol(y_param);
 
-        addPoint(i, data_mat(i,x_param), data_mat(i,y_param));
+    int N = data_container->getDataMat().rows();
+    for (int i=0; i<N; i++)
+    {
+        addPoint(i, data_x(i), data_y(i));
     }
 }
 
@@ -442,7 +444,7 @@ void PlotWindow::endEllipseSelection(QMouseEvent *event)
         QElapsedTimer timer;
         timer.start();
         selectionObj->pointsInEllipse(ellipse, data_dic, xscale, yscale);
-        //qDebug() << "Ellipse selection time: " << timer.elapsed();
+        qDebug() << "Ellipse selection time: " << timer.elapsed();
         if (ellipse != nullptr)
         {
             ellipse->topLeft->setCoords(0, 0);
@@ -524,7 +526,7 @@ void PlotWindow::startEndLine(QMouseEvent *event)
         QElapsedTimer timer;
         timer.start();
         selectionObj->pointsInPoly(data_dic, xscale, yscale);
-        //qDebug() << "Polygonal selection time :" << timer.elapsed();
+        qDebug() << "Polygonal selection time :" << timer.elapsed();
 
         /* erase polygon on the plot */
         while(!polygon.isEmpty())

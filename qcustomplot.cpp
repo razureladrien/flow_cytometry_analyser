@@ -17846,7 +17846,7 @@ void QCPAxisRect::mouseMoveEvent(QMouseEvent *event, const QPointF &startPos)
   if (mDragging && mParentPlot->interactions().testFlag(QCP::iRangeDrag))
   {
     double fps = 1/(double(timer.elapsed())/1000);
-    //qDebug() << fps << "fps";
+    qDebug() << fps << "fps";
     timer.restart();
     if (mRangeDrag.testFlag(Qt::Horizontal))
     {
