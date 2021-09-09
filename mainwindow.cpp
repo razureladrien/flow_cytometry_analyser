@@ -22,27 +22,6 @@ MainWindow::~MainWindow()
 }
 
 
-//void MainWindow::on_btn_resolution_clicked()
-//{
-//    resolution_flag = !resolution_flag;
-//    if (resolution_flag == true)
-//    {
-//        qv_x_to_plot = qv_x;
-//        qv_y_to_plot = qv_y;
-//    } else if (resolution_flag == false) {
-//        qv_x_to_plot = {};
-//        qv_y_to_plot = {};
-//        double r;
-//        for (int i=0; i<10000; i++)
-//        {
-//            r = rand() % qv_x.length();
-//            qv_x_to_plot.append(qv_x[r]);
-//            qv_y_to_plot.append(qv_y[r]);
-//        }
-//    }
-//    plot(QCPScatterStyle(QCPScatterStyle::ssDisc, Qt::black, 1), 0, qv_x_to_plot,qv_y_to_plot);
-//}
-
 /* opening file */
 void MainWindow::on_actionOpen_triggered()
 {
@@ -116,7 +95,7 @@ void MainWindow::on_actionAdd_plot_triggered()
     } else if (number_of_plots < 6) {
         int id = plot_queue.last();
         plot_queue.pop_back();
-        PlotWindow *p = new PlotWindow(this, data_container->getParameters(), data_container,selectionObj, id, global_scatter_size);
+        PlotWindow *p = new PlotWindow(this, data_container->getParameters(), data_container,selectionObj, id, global_scatter_size, data_shape, selection_shape);
 
         if (id < 3)
             ui->gridLayout->addWidget(p->getWindow(),0,id);
@@ -162,8 +141,8 @@ void MainWindow::selection(QList<int> keys)
     for (auto p : plot_windows.keys())
     {
         QMap<int, QVector<double>> plot_data = removeNonUnique(plot_windows[p]->getData(),keys);
-        plot_windows[p]->plot(QCPScatterStyle(QCPScatterStyle::ssDisc, Qt::black, global_scatter_size),0,plot_data);
-        plot_windows[p]->plot_values(QCPScatterStyle(QCPScatterStyle::ssDisc, Qt::red, global_scatter_size),1,keys);
+        plot_windows[p]->plot(QCPScatterStyle(data_shape, Qt::black, global_scatter_size),0,plot_data);
+        plot_windows[p]->plot_values(QCPScatterStyle(selection_shape, Qt::red, global_scatter_size),1,keys);
     }
     qDebug() << "Global plot time: " << timer.elapsed();
 }
@@ -196,8 +175,8 @@ void MainWindow::setMarkerSize(double size)
         {
             QMap<int, QVector<double>> plot_data = removeNonUnique(plot_windows[p]->getData(),keys);
             plot_windows[p]->setScatterSize(size);
-            plot_windows[p]->plot(QCPScatterStyle(QCPScatterStyle::ssDisc, Qt::black, global_scatter_size),0,plot_data);
-            plot_windows[p]->plot_values(QCPScatterStyle(QCPScatterStyle::ssDisc, Qt::red, global_scatter_size),1,keys);
+            plot_windows[p]->plot(QCPScatterStyle(data_shape, Qt::black, global_scatter_size),0,plot_data);
+            plot_windows[p]->plot_values(QCPScatterStyle(selection_shape, Qt::red, global_scatter_size),1,keys);
         }
     }
 }

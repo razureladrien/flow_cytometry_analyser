@@ -57,6 +57,8 @@ private:
     qint32 number_of_plots = 0;
     QList<int> plot_queue = {5,4,3,2,1,0};
     QMap<int, PlotWindow *> plot_windows = {};
+    QCPScatterStyle::ScatterShape data_shape = QCPScatterStyle::ssDisc;
+    QCPScatterStyle::ScatterShape selection_shape = QCPScatterStyle::ssDisc;
 
     double global_scatter_size = 1;
 

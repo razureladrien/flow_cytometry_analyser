@@ -1,12 +1,14 @@
 #include "plotwindow.h"
 
-PlotWindow::PlotWindow(QWidget *parent, QList<QString> params, DatasetContainer *data, CustomPointSelection *select, int id, double size)
+PlotWindow::PlotWindow(QWidget *parent, QList<QString> params, DatasetContainer *data, CustomPointSelection *select, int id,
+                       double size, QCPScatterStyle::ScatterShape d_shape , QCPScatterStyle::ScatterShape s_shape)
 {
     selectionObj = select;
     setParameters(params);
     setData(data);
     setID(id);
     setScatterSize(size);
+    setScatterShape(d_shape, s_shape);
 
     /*** Plot UI setup ***/
     plot_box = new QGroupBox(parent);
@@ -78,7 +80,7 @@ PlotWindow::PlotWindow(QWidget *parent, QList<QString> params, DatasetContainer 
         setDataFromParam(cbox_x->currentIndex(),cbox_y->currentIndex());
 
     QCPScatterStyle style;
-    style.setShape(QCPScatterStyle::ssDisc);
+    style.setShape(data_shape);
     style.setSize(scatter_size);
     style.setPen(QPen(Qt::black));
     plot(style, 0, data_dic);
@@ -130,6 +132,7 @@ PlotWindow::PlotWindow(QWidget *parent, QList<QString> params, DatasetContainer 
     connect(btn_logy, SIGNAL(stateChanged(int)), SLOT(axisScaleY(int)));
 
     connect(getPlot(), SIGNAL(mouseMove(QMouseEvent*)), SLOT(mouseOverAxis(QMouseEvent*)));
+    connect(getPlot(), SIGNAL(mousePress(QMouseEvent*)), SLOT(adaptativeSampling(QMouseEvent*)));
 
     connect(getPlot()->xAxis, SIGNAL(selectionChanged(QCPAxis::SelectableParts)), SLOT(xAxisSelect(QCPAxis::SelectableParts)));
     connect(getPlot()->yAxis, SIGNAL(selectionChanged(QCPAxis::SelectableParts)), SLOT(yAxisSelect(QCPAxis::SelectableParts)));
@@ -368,7 +371,7 @@ void PlotWindow::on_btn_ellipse_clicked()
     getPlot()->setInteraction(QCP::iRangeDrag, false);
     getPlot()->setInteraction(QCP::iRangeZoom, false);
     getPlot()->setSelectionRectMode(QCP::srmNone);
-    plot(QCPScatterStyle(QCPScatterStyle::ssDisc, Qt::black, scatter_size), 0, data_dic);
+    plot(QCPScatterStyle(data_shape, Qt::black, scatter_size), 0, data_dic);
     btn_ellipse->setChecked(true);
 }
 
@@ -393,7 +396,7 @@ void PlotWindow::on_btn_free_form_clicked()
         getPlot()->removeItem(polygon.takeFirst());
 
     getPlot()->graph(1)->data()->clear();
-    plot(QCPScatterStyle(QCPScatterStyle::ssDisc, Qt::black, scatter_size), 0, data_dic);
+    plot(QCPScatterStyle(data_shape, Qt::black, scatter_size), 0, data_dic);
 
     getPlot()->setInteraction(QCP::iRangeDrag, false);
     getPlot()->setInteraction(QCP::iRangeZoom, false);
@@ -404,21 +407,22 @@ void PlotWindow::on_btn_free_form_clicked()
 
 void PlotWindow::on_btn_reset_clicked()
 {
-    getPlot()->xAxis->setRange(0,1);
-    getPlot()->yAxis->setRange(0,1);
-    getPlot()->graph(0)->rescaleAxes(true);
+    getPlot()->graph(0)->rescaleAxes(false);
     getPlot()->replot();
 }
 
 void PlotWindow::startEllipseSelection(QMouseEvent *event)
 {
-    if (ellipse_select)
+    if(event->button() == Qt::LeftButton)
     {
-    eActive = true;
-    double x_pos = getPlot()->xAxis->pixelToCoord(event->pos().x());
-    double y_pos = getPlot()->yAxis->pixelToCoord(event->pos().y());
-    ellipse->topLeft->setCoords(x_pos, y_pos);
-    ellipse->bottomRight->setCoords(x_pos, y_pos);
+        if (ellipse_select)
+        {
+        eActive = true;
+        double x_pos = getPlot()->xAxis->pixelToCoord(event->pos().x());
+        double y_pos = getPlot()->yAxis->pixelToCoord(event->pos().y());
+        ellipse->topLeft->setCoords(x_pos, y_pos);
+        ellipse->bottomRight->setCoords(x_pos, y_pos);
+        }
     }
 }
 
@@ -444,7 +448,7 @@ void PlotWindow::endEllipseSelection(QMouseEvent *event)
         QElapsedTimer timer;
         timer.start();
         selectionObj->pointsInEllipse(ellipse, data_dic, xscale, yscale);
-        qDebug() << "Ellipse selection time: " << timer.elapsed();
+        //qDebug() << "Ellipse selection time: " << timer.elapsed();
         if (ellipse != nullptr)
         {
             ellipse->topLeft->setCoords(0, 0);
@@ -456,100 +460,99 @@ void PlotWindow::endEllipseSelection(QMouseEvent *event)
 
 void PlotWindow::startEndLine(QMouseEvent *event)
 {
-    double x_pos = getPlot()->xAxis->pixelToCoord(event->pos().x());
-    double y_pos = getPlot()->yAxis->pixelToCoord(event->pos().y());
-
-    /* selection started*/
-    if (free_form_select && !lActive)
+    if(event->button() == Qt::LeftButton)
     {
-        /* clear all lines registered from the previous selection.
-        It's a reset */
-        selectionObj->clearVerteces();
-        while(!polygon.isEmpty())
-            getPlot()->removeItem(polygon.takeFirst());
+        double x_pos = getPlot()->xAxis->pixelToCoord(event->pos().x());
+        double y_pos = getPlot()->yAxis->pixelToCoord(event->pos().y());
 
-        /* Create the first line and compute the little cicle around
-        the first point so it makes the selection feature easier to close */
-
-        line = new QCPItemLine(getPlot());
-        line->setPen(QPen(QBrush(Qt::red), 1.5, Qt::DashLine));
-        line->start->setCoords(x_pos, y_pos);
-        line->end->setCoords(x_pos, y_pos);
-        line->setLayer("selectionLayer");
-        getPlot()->replot();
-
-        polygon.append(line);
-        poly_closed->setPen(Qt::NoPen);
-
-        /* circle that when clicked on, free selection is ended and points selected revealed */
-        if ((xscale == "lin") & (yscale == "lin"))
+        /* selection started*/
+        if (free_form_select && !lActive)
         {
-            radius_x = qAbs((getPlot()->xAxis->range().upper - getPlot()->xAxis->range().lower)/plot_widget->size().width()*5);
-            radius_y = (getPlot()->yAxis->range().upper - getPlot()->yAxis->range().lower)/plot_widget->size().height()*5;
-        }
-        else if ((xscale == "log") & (yscale == "log"))
+            /* clear all lines registered from the previous selection.
+            It's a reset */
+            selectionObj->clearVerteces();
+            while(!polygon.isEmpty())
+                getPlot()->removeItem(polygon.takeFirst());
+
+            /* Create the first line and compute the little cicle around
+            the first point so it makes the selection feature easier to close */
+
+            line = new QCPItemLine(getPlot());
+            line->setPen(QPen(QBrush(Qt::red), 1.5, Qt::DashLine));
+            line->start->setCoords(x_pos, y_pos);
+            line->end->setCoords(x_pos, y_pos);
+            line->setLayer("selectionLayer");
+            getPlot()->replot();
+
+            polygon.append(line);
+            poly_closed->setPen(Qt::NoPen);
+
+            /* circle that when clicked on, free selection is ended and points selected revealed */
+            if ((xscale == "lin") & (yscale == "lin"))
+            {
+                radius_x = qAbs((getPlot()->xAxis->range().upper - getPlot()->xAxis->range().lower)/plot_widget->size().width()*5);
+                radius_y = (getPlot()->yAxis->range().upper - getPlot()->yAxis->range().lower)/plot_widget->size().height()*5;
+            }
+            else if ((xscale == "log") & (yscale == "log"))
+            {
+                radius_x = qAbs((log10(getPlot()->xAxis->range().upper) - log10(getPlot()->xAxis->range().lower))/plot_widget->size().width()*10*x_pos);
+                radius_y = qAbs((log10(getPlot()->yAxis->range().upper) - log10(getPlot()->yAxis->range().lower))/plot_widget->size().height()*10*y_pos);
+            }
+            else if ((xscale == "lin") & (yscale == "log"))
+            {
+                radius_x = qAbs((getPlot()->xAxis->range().upper - getPlot()->xAxis->range().lower)/plot_widget->size().width()*5);
+                radius_y = qAbs((log10(getPlot()->yAxis->range().upper) - log10(getPlot()->yAxis->range().lower))/plot_widget->size().height()*10*y_pos);
+            }
+            else if ((xscale == "log") & (yscale == "lin"))
+            {
+                radius_x = qAbs((log10(getPlot()->xAxis->range().upper) - log10(getPlot()->xAxis->range().lower))/plot_widget->size().width()*10*x_pos);
+                radius_y = qAbs((getPlot()->yAxis->range().upper - getPlot()->yAxis->range().lower)/plot_widget->size().height()*5);
+            }
+            double a = x_pos-radius_x;
+            double b = y_pos+radius_y;
+            double c = x_pos+radius_x;
+            double d = y_pos-radius_y;
+            start_v_x = x_pos;
+            start_v_y = y_pos;
+
+            poly_closed->topLeft->setCoords(a, b);
+            poly_closed->bottomRight->setCoords(c,d);
+
+            lActive = true;
+            selectionObj->addVertex(x_pos, y_pos);
+            started_line = true;
+
+        /* selection ended */
+        } else if ( ( ((x_pos-start_v_x)*(x_pos-start_v_x) / (radius_x*radius_x) + (y_pos-start_v_y)*(y_pos-start_v_y) / (radius_y*radius_y)) <= 1) && free_form_select && lActive)
         {
-            radius_x = qAbs((log10(getPlot()->xAxis->range().upper) - log10(getPlot()->xAxis->range().lower))/plot_widget->size().width()*10*x_pos);
-            radius_y = qAbs((log10(getPlot()->yAxis->range().upper) - log10(getPlot()->yAxis->range().lower))/plot_widget->size().height()*10*y_pos);
+            line->end->setCoords(start_v_x, start_v_y);
+            selectionObj->addVertex(start_v_x, start_v_y);
+            lActive = false;
+            poly_closed->setBrush(Qt::NoBrush);
+            QElapsedTimer timer;
+            timer.start();
+            selectionObj->pointsInPoly(data_dic, xscale, yscale);
+            //qDebug() << "Polygonal selection time :" << timer.elapsed();
+
+            /* erase polygon on the plot */
+            while(!polygon.isEmpty())
+                getPlot()->removeItem(polygon.takeFirst());
+
+            /* send signal to mainwindow */
+            emit free_selection_closed(selectionObj->getSelectionPoints());
+
+        /* selection continuing */
+        } else if (free_form_select && lActive){
+            line = new QCPItemLine(getPlot());
+            line->setPen(QPen(QBrush(Qt::red), 1.5, Qt::DashLine));
+            line->start->setCoords(x_pos, y_pos);
+            line->end->setCoords(x_pos, y_pos);
+            line->setLayer("selectionLayer");
+            getPlot()->replot();
+
+            polygon.append(line);
+            selectionObj->addVertex(x_pos, y_pos);
         }
-        else if ((xscale == "lin") & (yscale == "log"))
-        {
-            radius_x = qAbs((getPlot()->xAxis->range().upper - getPlot()->xAxis->range().lower)/plot_widget->size().width()*5);
-            radius_y = qAbs((log10(getPlot()->yAxis->range().upper) - log10(getPlot()->yAxis->range().lower))/plot_widget->size().height()*10*y_pos);
-        }
-        else if ((xscale == "log") & (yscale == "lin"))
-        {
-            radius_x = qAbs((log10(getPlot()->xAxis->range().upper) - log10(getPlot()->xAxis->range().lower))/plot_widget->size().width()*10*x_pos);
-            radius_y = qAbs((getPlot()->yAxis->range().upper - getPlot()->yAxis->range().lower)/plot_widget->size().height()*5);
-        }
-        double a = x_pos-radius_x;
-        double b = y_pos+radius_y;
-        double c = x_pos+radius_x;
-        double d = y_pos-radius_y;
-        start_v_x = x_pos;
-        start_v_y = y_pos;
-
-        poly_closed->topLeft->setCoords(a, b);
-        poly_closed->bottomRight->setCoords(c,d);
-
-        lActive = true;
-        selectionObj->addVertex(x_pos, y_pos);
-        started_line = true;
-
-    /* selection ended */
-    } else if ( ( ((x_pos-start_v_x)*(x_pos-start_v_x) / (radius_x*radius_x) + (y_pos-start_v_y)*(y_pos-start_v_y) / (radius_y*radius_y)) <= 1) && free_form_select && lActive)
-    {
-        line->end->setCoords(start_v_x, start_v_y);
-        selectionObj->addVertex(start_v_x, start_v_y);
-        lActive = false;
-        poly_closed->setBrush(Qt::NoBrush);
-        QElapsedTimer timer;
-        timer.start();
-        selectionObj->pointsInPoly(data_dic, xscale, yscale);
-        qDebug() << "Polygonal selection time :" << timer.elapsed();
-
-        /* erase polygon on the plot */
-        while(!polygon.isEmpty())
-            getPlot()->removeItem(polygon.takeFirst());
-
-        /* send signal to mainwindow */
-        emit free_selection_closed(selectionObj->getSelectionPoints());
-//        t = clock()-t;
-//        qDebug() << t;
-        //plot(QCPScatterStyle(QCPScatterStyle::ssDisc, Qt::gray, 1), 0, getX(),getY());
-        //plot(QCPScatterStyle(QCPScatterStyle::ssDisc, Qt::black, 1), 1, selectionObj->getSelectionPoints()[0],selectionObj->getSelectionPoints()[1]);
-
-    /* selection continuing */
-    } else if (free_form_select && lActive){
-        line = new QCPItemLine(getPlot());
-        line->setPen(QPen(QBrush(Qt::red), 1.5, Qt::DashLine));
-        line->start->setCoords(x_pos, y_pos);
-        line->end->setCoords(x_pos, y_pos);
-        line->setLayer("selectionLayer");
-        getPlot()->replot();
-
-        polygon.append(line);
-        selectionObj->addVertex(x_pos, y_pos);
     }
 }
 
@@ -583,13 +586,13 @@ void PlotWindow::on_cbox_x_activated()
     setDataFromParam(cbox_x->currentIndex(),cbox_y->currentIndex());
     cbox_x->setToolTip(cbox_x->currentText());
     QCPScatterStyle style;
-    style.setShape(QCPScatterStyle::ssDisc);
+    style.setShape(data_shape);
     style.setSize(scatter_size);
     style.setPen(QPen(Qt::black));
 
     QMap<int, QVector<double>> plot_data = removeNonUnique(getData(),selectionObj->getSelectionPoints());
     plot(style, 0, plot_data);
-    plot_values(QCPScatterStyle(QCPScatterStyle::ssDisc, Qt::red, scatter_size),1,selectionObj->getSelectionPoints());
+    plot_values(QCPScatterStyle(selection_shape, Qt::red, scatter_size),1,selectionObj->getSelectionPoints());
     getPlot()->graph(0)->rescaleAxes(true);
     getPlot()->replot();
 }
@@ -600,13 +603,13 @@ void PlotWindow::on_cbox_y_activated()
     setDataFromParam(cbox_x->currentIndex(),cbox_y->currentIndex());
     cbox_y->setToolTip(cbox_y->currentText());
     QCPScatterStyle style;
-    style.setShape(QCPScatterStyle::ssDisc);
+    style.setShape(data_shape);
     style.setSize(scatter_size);
     style.setPen(QPen(Qt::black));
 
     QMap<int, QVector<double>> plot_data = removeNonUnique(getData(),selectionObj->getSelectionPoints());
     plot(style, 0, plot_data);
-    plot_values(QCPScatterStyle(QCPScatterStyle::ssDisc, Qt::red, scatter_size),1,selectionObj->getSelectionPoints());
+    plot_values(QCPScatterStyle(selection_shape, Qt::red, scatter_size),1,selectionObj->getSelectionPoints());
     getPlot()->graph(0)->rescaleAxes(true);
     getPlot()->replot();
 }
@@ -794,5 +797,15 @@ void PlotWindow::moveAxisDragging(QWheelEvent *event)
             getPlot()->yAxis->setRange(lower-pttt*(log10(upper)-log10(lower))/100, upper+pttt*(log10(upper)-log10(lower))/100);
             getPlot()->replot();
         }
+    }
+}
+
+void PlotWindow::adaptativeSampling(QMouseEvent *event)
+{
+    if(event->button() == Qt::RightButton)
+    {
+        adapt_sampling = !adapt_sampling;
+        getPlot()->graph(0)->setAdaptiveSampling(adapt_sampling);
+        getPlot()->graph(1)->setAdaptiveSampling(adapt_sampling);
     }
 }

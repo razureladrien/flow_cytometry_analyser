@@ -17,7 +17,8 @@ class PlotWindow : public QObject
 {
     Q_OBJECT
 public:
-    PlotWindow(QWidget *parent = nullptr, QList<QString> params = {}, DatasetContainer *data = nullptr, CustomPointSelection *select = nullptr, int id = 0, double size = 1);
+    PlotWindow(QWidget *parent = nullptr, QList<QString> params = {}, DatasetContainer *data = nullptr, CustomPointSelection *select = nullptr,
+               int id = 0, double size = 1, QCPScatterStyle::ScatterShape d_shape = QCPScatterStyle::ssDisc, QCPScatterStyle::ScatterShape = QCPScatterStyle::ssDisc);
     ~PlotWindow();
 
     QGroupBox* getWindow();
@@ -39,6 +40,7 @@ public:
     void setScatterSize(double s){scatter_size = s;};
 
     void setDataFromParam(int x_param, int y_param);
+    void setScatterShape(QCPScatterStyle::ScatterShape d_shape, QCPScatterStyle::ScatterShape s_shape) { data_shape = d_shape, selection_shape = s_shape; };
 
     QMap<int, QVector<double> > removeNonUnique(QMap<int, QVector<double> > map1, QList<int> keys);
 
@@ -76,6 +78,7 @@ public slots:
     void xAxisSelect(QCPAxis::SelectableParts);
     void yAxisSelect(QCPAxis::SelectableParts);
     void moveAxisDragging(QWheelEvent*);
+    void adaptativeSampling(QMouseEvent *event);
 
 signals:
     void deleted(int); // signal emitted when a plot is closed
@@ -87,6 +90,8 @@ private:
     QGroupBox *button_box;
     QGroupBox *plot_box;
     QSize size;
+    QCPScatterStyle::ScatterShape data_shape;
+    QCPScatterStyle::ScatterShape selection_shape;
 
     QCheckBox *btn_logx, *btn_logy;
     QList<QPushButton *> tool_buttons;
@@ -127,6 +132,8 @@ private:
     //bool resolution_flag=true; // true = high res, false = low res
     bool xAxis_selected=false;
     bool yAxis_selected=false;
+
+    bool adapt_sampling = true;
 
     // used to change de aspect of the cursor
     QCursor current_cursor;
